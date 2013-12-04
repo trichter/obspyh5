@@ -1,4 +1,5 @@
 from numpy import string_
+from os.path import splitext
 from warnings import warn
 from obspy.core import Trace, Stream, UTCDateTime as UTC
 
@@ -7,7 +8,7 @@ try:
 except ImportError:
     pass
 
-_IGNORE = ('endtime', 'delta')
+_IGNORE = ('endtime', 'delta', '_format')
 
 
 def _is_utc(utc):
@@ -24,16 +25,14 @@ def is_hdf5(fname):
 
 def read_hdf5(fname, group='/', **kwargs):
     with h5py.File(fname, 'r') as f:
-        group = f.require_group(group)
-        return hdf2stream(group, **kwargs)
+        return hdf2stream(f[group], **kwargs)
 
 
 def write_hdf5(fname, stream, mode='w', group='/', **kwargs):
-    if not fname.endswith('.hdf5'):
-        fname = fname + '.hdf5'
+    if not splitext(fname)[1]:
+        fname = fname + '.h5'
     with h5py.File(fname, mode, libver='latest') as f:
-        group = f.require_group(group)
-        stream2hdf(group, stream, **kwargs)
+        stream2hdf(f.require_group(group), stream, **kwargs)
 
 
 def trace2dataset(dataset, trace, ignore=()):
