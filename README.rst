@@ -7,7 +7,7 @@ Welcome!
 
 Saves and writes ObsPy streams to hdf5 files.
 Stats attributes are preserved if they are numbers, strings,
-UTCDateTime objects and arrays.
+UTCDateTime objects or numpy arrays.
 You can use it as a plugin to obspy or you can use the internal api
 e.g. to iterate over traces in a huge hdf5 file.
 
@@ -43,12 +43,12 @@ Example using internal api: ::
 
     import hpy5
     from obspyh5 import hdf2stream, stream2hdf
-    fin = hpy5.File('huge.h5')
+    fin = hpy5.File('huge.h5') # file with a lot of groups, each containing some datasets with saved traces
     fout = hpy5.File('results.h5')
     for group in fin:
-        stream = hfd2stream(fin)  # reads stream from file
+        stream = hfd2stream(group)  # reads stream from group from file
         stream.do_something()
-        stream2hdf(stream, fout)  # saves stream to file
+        stream2hdf(stream, fout.requires_group(group.name))  # saves stream into group to file
     fin.close()
     fout.close()
 
