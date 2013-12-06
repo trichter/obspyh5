@@ -5,6 +5,12 @@ hdf5 write/read support for obspy
 
 Welcome!
 
+Saves and writes ObsPy streams to hdf5 files.
+Stats attributes are preserved if they are numbers, strings,
+UTCDateTime objects and arrays.
+You can use it as a plugin to obspy or you can use the internal api
+e.g. to iterate over traces in a huge hdf5 file.
+
 Installation
 ^^^^^^^^^^^^
 Requires obspy and h5py. Install by::
@@ -17,7 +23,7 @@ or download and run::
 
 Usage
 ^^^^^
-::
+Obspy plugin example: ::
 
     >>> from obspy import read
     >>> stream = read()  # load example stream
@@ -33,6 +39,18 @@ Usage
     BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
 
+Example using internal api: ::
+
+    import hpy5
+    from obspyh5 import hdf2stream, stream2hdf
+    fin = hpy5.File('huge.h5')
+    fout = hpy5.File('results.h5')
+    for group in fin:
+        stream = hfd2stream(fin)  # reads stream from file
+        stream.do_something()
+        stream2hdf(stream, fout)  # saves stream to file
+    fin.close()
+    fout.close()
 
 Note
 ^^^^
