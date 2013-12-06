@@ -5,11 +5,6 @@ hdf5 write/read support for obspy
 
 Welcome!
 
-Requirements
-^^^^^^^^^^^^
-
-obspy and h5py
-
 Installation
 ^^^^^^^^^^^^
 Requires obspy and h5py. Install by::
