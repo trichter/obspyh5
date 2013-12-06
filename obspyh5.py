@@ -9,9 +9,10 @@ except ImportError:
     pass
 
 _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
-_INDEX = ('{station}.{network}/{station}.{network}.{location}.{channel}_'
+_INDEX = ('{station}.{network}.{location}.{channel}_'
           '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_'
           '{endtime.datetime:%Y-%m-%dT%H:%M:%S}')
+
 
 def _is_utc(utc):
     utc = str(utc)
@@ -26,19 +27,28 @@ def is_hdf5(fname):
 
 
 def read_hdf5(fname, group='/waveforms', **kwargs):
+    # These keywords get handled inside obspy
+    for key in ('nearest_sample', 'starttime', 'endtime'):
+        try:
+            del kwargs[key]
+        except KeyError:
+            pass
     with h5py.File(fname, 'r') as f:
         return hdf2stream(f[group], **kwargs)
 
 
-def write_hdf5(fname, stream, mode='w', group='/waveforms', **kwargs):
+def write_hdf5(stream, fname, mode='w', group='/waveforms', **kwargs):
+    if isinstance(fname, file):
+        f = fname
+        fname = f.name
+        f.close()
     if not splitext(fname)[1]:
         fname = fname + '.h5'
     with h5py.File(fname, mode, libver='latest') as f:
-        f.require_group(group)
-        stream2hdf(f[group], stream, **kwargs)
+        stream2hdf(stream, f.require_group(group), **kwargs)
 
 
-def trace2hdf(group, trace, override='warn', ignore=(), **kwargs):
+def trace2hdf(trace, group, override='warn', ignore=(), **kwargs):
     """Write trace into group"""
     if override not in ('warn', 'raise', 'ignore', 'dont'):
         msg = "Override has to be one of ('warn', 'raise', 'ignore', 'dont')."
@@ -67,13 +77,12 @@ def trace2hdf(group, trace, override='warn', ignore=(), **kwargs):
                 except TypeError:
                     warn(("Writing header '%s' is not supported. Only h5py "
                           "types and UTCDateTime are supported.") % key)
-                                   
 
 
-def stream2hdf(group, stream, **kwargs):
+def stream2hdf(stream, group, **kwargs):
     """Write stream into group"""
     for tr in stream:
-        trace2hdf(group, tr, **kwargs)
+        trace2hdf(tr, group, **kwargs)
 
 
 def dataset2trace(dataset, headonly=False):
