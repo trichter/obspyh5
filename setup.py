@@ -3,7 +3,7 @@ from setuptools import setup
 ENTRY_POINTS = {
     'obspy.plugin.waveform': ['H5 = obspyh5'],
     'obspy.plugin.waveform.H5': [
-        'isFormat = obspyh5:is_hdf5',
+        'isFormat = obspyh5:is_obspyh5',
         'readFormat = obspyh5:read_hdf5',
         'writeFormat = obspyh5:write_hdf5']}
 

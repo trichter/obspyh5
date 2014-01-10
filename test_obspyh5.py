@@ -13,7 +13,7 @@ import h5py
 class HDF5TestCase(unittest.TestCase):
 
     def setUp(self):
-        self.stream = read()
+        self.stream = read().sort()
         self.stream[0].stats.onset = UTC()
         self.stream[0].stats.header = 42
         self.stream[0].stats.header2 = 'Test entry'
@@ -27,9 +27,10 @@ class HDF5TestCase(unittest.TestCase):
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
             stream.write(fname, 'H5')
-            print stream
-            print read(fname)
-            self.assertEqual(stream, read(fname))
+            stream2 = read(fname).sort()
+            for tr in stream2:
+                del tr.stats._format
+            self.assertEqual(stream, stream2)
 
     def test_hdf5_basic(self):
         stream = self.stream
@@ -37,7 +38,7 @@ class HDF5TestCase(unittest.TestCase):
             fname = ft.name
             # write stream and read again, append data
             write_hdf5(stream[:1], fname)
-            self.assertTrue(obspyh5.is_hdf5(fname))
+            self.assertTrue(obspyh5.is_obspyh5(fname))
             stream2 = read_hdf5(fname)
             write_hdf5(stream[1:], fname, mode='a')
             stream3 = read_hdf5(fname)
@@ -77,8 +78,8 @@ class HDF5TestCase(unittest.TestCase):
                     self.assertEqual(len(w), 1)
                 with self.assertRaises(KeyError):
                     trace2hdf(stream[0], f, key=None, override='raise')
-                # is_hdf5 is only working with file names
-                self.assertFalse(obspyh5.is_hdf5(f))
+                # is_obspyh5 is only working with file names
+                self.assertFalse(obspyh5.is_obspyh5(f))
 
 def suite():
     return unittest.makeSuite(HDF5TestCase, 'test')

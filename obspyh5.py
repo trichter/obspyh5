@@ -34,9 +34,12 @@ def _is_utc(utc):
     return len(utc) == 27 and utc.endswith('Z')
 
 
-def is_hdf5(fname):
+def is_obspyh5(fname):
     try:
-        return h5py.is_hdf5(fname)
+        if not h5py.is_hdf5(fname):
+            return False
+        with h5py.File(fname, 'r') as f:
+            return f.attrs['file_format'].lower() == 'obspyh5'
     except:
         return False
 
@@ -56,6 +59,7 @@ def write_hdf5(stream, fname, mode='w', group='/waveforms', **kwargs):
     if not splitext(fname)[1]:
         fname = fname + '.h5'
     with h5py.File(fname, mode, libver='latest') as f:
+        f.attrs['file_format'] = 'obspyh5'
         stream2hdf(stream, f.require_group(group), **kwargs)
 
 
