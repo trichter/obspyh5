@@ -52,9 +52,39 @@ Example using internal api: ::
     fin.close()
     fout.close()
 
+Alternative indexing
+^^^^^^^^^^^^^^^^^^^^
+obspyh5 supports alternative indexing for writing cross-correlated traces.
+Therefore stats needs the entries 'network1', 'station1', 'location1',
+'channel1', 'network2', 'station2', 'location2', channel2'
+of the first and second station, respectively. Usage: ::
+
+    >>> from obspy import read
+    >>> import obspyh5
+    >>> obspyh5.set_index('xcorr')  # activate xcorr indexing
+    >>> stream = read()
+    >>> for i, tr in enumerate(stream):  # manipulate stats object
+            station1, station2 = 'ST1', 'ST%d' % i
+            channel1, channel2 = 'HHZ', 'HHN'
+            s = tr.stats
+            # we manipulate seed id so that important information gets
+            # printed by obspy
+            s.network, s.station = s.station1, s.channel1 = station1, channel1
+            s.location, s.channel = s.station2, s.channel2 = station2, channel2
+            s.network1 = s.network2 = 'BW'
+            s.location1 = s.location2 = ''
+    >>> print stream
+    ST1.HHZ.ST0.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+    ST1.HHZ.ST1.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+    ST1.HHZ.ST2.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+    >>> stream.write('test_xcorr.h5', 'H5')
+    >>> print read('test_xcorr.h5')
+    ST1.HHZ.ST0.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+    ST1.HHZ.ST1.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+    ST1.HHZ.ST2.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+
 Note
 ^^^^
-
 Development stays on a low level in favour of sdf_.
 
 .. _sdf: https://github.com/krischer/SDF/wiki

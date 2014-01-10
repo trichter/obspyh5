@@ -24,9 +24,17 @@ except ImportError:
     pass
 
 _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
-_INDEX = ('{station}.{network}.{location}.{channel}_'
-          '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_'
-          '{endtime.datetime:%Y-%m-%dT%H:%M:%S}')
+
+_INDEXES = {
+    'standard': ('{network}.{station}/{location}.{channel}/'
+                 '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_'
+                 '{endtime.datetime:%Y-%m-%dT%H:%M:%S}'),
+    'xcorr': ('{network1}.{station1}-{network2}.{station2}/'
+              '{location1}.{channel1}-{location2}.{channel2}/'
+              '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_'
+              '{endtime.datetime:%Y-%m-%dT%H:%M:%S}')}
+
+_INDEX = _INDEXES['standard']
 
 
 def _is_utc(utc):
@@ -34,7 +42,23 @@ def _is_utc(utc):
     return len(utc) == 27 and utc.endswith('Z')
 
 
+def set_index(index):
+    """
+    Set index
+
+    Possible values: 'standard', 'xcorr' or index itself.
+    """
+    global _INDEX
+    if index in _INDEXES.keys():
+        _INDEX = _INDEXES[index]
+    else:
+        _INDEX = index
+
+
 def is_obspyh5(fname):
+    """
+    Check if file is hdf5 file and if it was written by obspyh5
+    """
     try:
         if not h5py.is_hdf5(fname):
             return False

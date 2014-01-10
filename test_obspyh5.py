@@ -28,9 +28,31 @@ class HDF5TestCase(unittest.TestCase):
             fname = ft.name
             stream.write(fname, 'H5')
             stream2 = read(fname).sort()
-            for tr in stream2:
-                del tr.stats._format
-            self.assertEqual(stream, stream2)
+        for tr in stream2:
+            del tr.stats._format
+        self.assertEqual(stream, stream2)
+
+    def test_hdf5_plugin_and_xcorr_index(self):
+        stream = self.stream.copy()
+        for i, tr in enumerate(stream):  # manipulate stats object
+            station1, station2 = 'ST1', 'ST%d' % i
+            channel1, channel2 = 'HHZ', 'HHN'
+            s = tr.stats
+            # we manipulate seed id so that important information gets
+            # printed by obspy
+            s.network, s.station = s.station1, s.channel1 = station1, channel1
+            s.location, s.channel = s.station2, s.channel2 = station2, channel2
+            s.network1 = s.network2 = 'BW'
+            s.location1 = s.location2 = ''
+        stream.sort()
+        obspyh5.set_index('xcorr')
+        with NamedTemporaryFile(suffix='.h5') as ft:
+            fname = ft.name
+            stream.write(fname, 'H5')
+            stream2 = read(fname).sort()
+        for tr in stream2:
+            del tr.stats._format
+        self.assertEqual(stream, stream2)
 
     def test_hdf5_basic(self):
         stream = self.stream
