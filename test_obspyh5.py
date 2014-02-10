@@ -17,6 +17,8 @@ class HDF5TestCase(unittest.TestCase):
         self.stream[0].stats.onset = UTC()
         self.stream[0].stats.header = 42
         self.stream[0].stats.header2 = 'Test entry'
+        for tr in self.stream:
+            del tr.stats.response
 
     def test_is_utc(self):
         self.assertTrue(obspyh5._is_utc(UTC()))
