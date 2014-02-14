@@ -42,7 +42,7 @@ def _is_utc(utc):
     return len(utc) == 27 and utc.endswith('Z')
 
 
-def set_index(index):
+def set_index(index='standard'):
     """
     Set index
 
