@@ -39,18 +39,16 @@ Obspy plugin example: ::
     BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
 
-Example using internal api: ::
+Example using apply2trace keyword to process traces "on the fly": ::
 
-    import hpy5
-    from obspyh5 import hdf2stream, stream2hdf
-    fin = hpy5.File('huge.h5') # file with a lot of groups, each containing some datasets with saved traces
-    fout = hpy5.File('results.h5')
-    for group in fin:
-        stream = hfd2stream(group)  # reads stream from group from file
-        stream.do_something()
-        stream2hdf(stream, fout.requires_group(group.name))  # saves stream into group to file
-    fin.close()
-    fout.close()
+    >>> from obspy import read
+    >>> def apply(trace):
+    >>>     trace.do_something()
+    >>>     trace.write('huge_out.h5', 'H5', mode='a')  # append mode to write into file
+    >>> dummy = read('huge_in.h5', apply2trace=apply)  # traces are passed to apply
+    >>> print dummy  # read returns a stream with a single dummy trace in this case
+    1 Trace(s) in Stream:
+    ... | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
 
 Alternative indexing
 ^^^^^^^^^^^^^^^^^^^^
@@ -82,6 +80,8 @@ of the first and second station, respectively. Usage: ::
     ST1.HHZ.ST0.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     ST1.HHZ.ST1.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     ST1.HHZ.ST2.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+
+The index can be set to a custom value.
 
 Note
 ^^^^

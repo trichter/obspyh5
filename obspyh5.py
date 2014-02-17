@@ -68,15 +68,31 @@ def is_obspyh5(fname):
         return False
 
 
-def read_hdf5(fname, group='/waveforms', **kwargs):
+def read_hdf5(fname, mode='r', group='/waveforms', headonly=False,
+              apply2trace=None, **kwargs):
     # These keywords get handled inside obspy
-    for key in ('nearest_sample', 'starttime', 'endtime'):
-        try:
-            del kwargs[key]
-        except KeyError:
-            pass
-    with h5py.File(fname, 'r') as f:
-        return hdf2stream(f[group], **kwargs)
+    if apply2trace is None:
+        for key in ('nearest_sample', 'starttime', 'endtime'):
+            try:
+                del kwargs[key]
+            except KeyError:
+                pass
+    with h5py.File(fname, mode) as f:
+        def _apply2item(index, dataset):
+            if isinstance(dataset, h5py.Dataset):
+                tr = dataset2trace(dataset, headonly=headonly)
+                apply2trace(tr)
+        group = f[group]
+        if apply2trace is None:
+            traces = []
+            apply2trace = traces.append
+        else:
+            traces = [Trace()]
+        if isinstance(group, h5py.Dataset):
+            _apply2item(None, group)
+        else:
+            group.visititems(_apply2item)
+    return Stream(traces=traces)
 
 
 def write_hdf5(stream, fname, mode='w', group='/waveforms', **kwargs):
@@ -136,14 +152,3 @@ def dataset2trace(dataset, headonly=False):
     else:
         tr = Trace(data=dataset[...], header=stats)
     return tr
-
-
-def hdf2stream(group, headonly=False):
-    """Load stream from group"""
-    def _collect_traces(index, dataset):
-        if isinstance(dataset, h5py.Dataset):
-            tr = dataset2trace(dataset, headonly=headonly)
-            traces.append(tr)
-    traces = []
-    group.visititems(_collect_traces)
-    return Stream(traces=traces)

@@ -26,6 +26,7 @@ class HDF5TestCase(unittest.TestCase):
         self.assertFalse(obspyh5._is_utc(110))
 
     def test_hdf5_plugin(self):
+        obspyh5.set_index()
         stream = self.stream
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
@@ -36,6 +37,7 @@ class HDF5TestCase(unittest.TestCase):
         self.assertEqual(stream, stream2)
 
     def test_hdf5_plugin_and_xcorr_index(self):
+        obspyh5.set_index('xcorr')
         stream = self.stream.copy()
         for i, tr in enumerate(stream):  # manipulate stats object
             station1, station2 = 'ST1', 'ST%d' % i
@@ -48,7 +50,6 @@ class HDF5TestCase(unittest.TestCase):
             s.network1 = s.network2 = 'BW'
             s.location1 = s.location2 = ''
         stream.sort()
-        obspyh5.set_index('xcorr')
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
             stream.write(fname, 'H5')
@@ -58,6 +59,7 @@ class HDF5TestCase(unittest.TestCase):
         self.assertEqual(stream, stream2)
 
     def test_hdf5_basic(self):
+        obspyh5.set_index()
         stream = self.stream
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
@@ -92,6 +94,7 @@ class HDF5TestCase(unittest.TestCase):
             del stream[0].stats.toomuch
 
     def test_hdf5_interface(self):
+        obspyh5.set_index()
         stream = self.stream
         with NamedTemporaryFile(suffix='.h5') as ft:
             with h5py.File(ft.name) as f:
@@ -105,6 +108,20 @@ class HDF5TestCase(unittest.TestCase):
                     trace2hdf(stream[0], f, key=None, override='raise')
                 # is_obspyh5 is only working with file names
                 self.assertFalse(obspyh5.is_obspyh5(f))
+
+    def test_hdf5_apply2trace(self):
+        obspyh5.set_index()
+        stream = self.stream
+        with NamedTemporaryFile(suffix='.h5') as ft:
+            fname = ft.name
+            stream.write(fname, 'H5')
+            traces = []
+            stream2 = read(fname, apply2trace=traces.append)
+            print stream2
+            self.assertEqual(len(stream2), 1)
+            self.assertEqual(len(stream2[0]), 0)
+            self.assertEqual(stream.traces, traces)
+
 
 def suite():
     return unittest.makeSuite(HDF5TestCase, 'test')
