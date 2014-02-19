@@ -67,7 +67,7 @@ def is_obspyh5(fname):
     except:
         return False
 
-
+_return_value_apply2trace = [None]
 def read_hdf5(fname, mode='r', group='/waveforms', headonly=False,
               apply2trace=None, **kwargs):
     # These keywords get handled inside obspy
@@ -81,7 +81,7 @@ def read_hdf5(fname, mode='r', group='/waveforms', headonly=False,
         def _apply2item(index, dataset):
             if isinstance(dataset, h5py.Dataset):
                 tr = dataset2trace(dataset, headonly=headonly)
-                apply2trace(tr)
+                return apply2trace(tr)
         group = f[group]
         if apply2trace is None:
             traces = []
