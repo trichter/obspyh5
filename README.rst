@@ -8,8 +8,7 @@ Welcome!
 Saves and writes ObsPy streams to hdf5 files.
 Stats attributes are preserved if they are numbers, strings,
 UTCDateTime objects or numpy arrays.
-You can use it as a plugin to obspy or you can use the internal api
-e.g. to iterate over traces in a huge hdf5 file.
+Its best used as a plugin to obspy.
 
 Installation
 ^^^^^^^^^^^^
@@ -23,7 +22,7 @@ or download and run::
 
 Usage
 ^^^^^
-Obspy plugin example: ::
+Basic example: ::
 
     >>> from obspy import read
     >>> stream = read()  # load example stream
@@ -32,30 +31,51 @@ Obspy plugin example: ::
     BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
-    >>> stream.write('test.h5', 'H5')
+    >>> stream.write('test.h5', 'H5')  # declare 'H5' as format
     >>> print read('test.h5')  # Order is not preserved!
     3 Trace(s) in Stream:
     BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
 
-Example using apply2trace keyword to process traces "on the fly": ::
+Example using apply2trace keyword to process traces "on the fly".: ::
 
     >>> from obspy import read
     >>> def apply(trace):
-    >>>     trace.do_something()
-    >>>     trace.write('huge_out.h5', 'H5', mode='a')  # append mode to write into file
-    >>> dummy = read('huge_in.h5', apply2trace=apply)  # traces are passed to apply
-    >>> print dummy  # read returns a stream with a single dummy trace in this case
+            trace.do_something()
+            trace.write('huge_out.h5', 'H5', mode='a')  # append mode to write into file
+
+We tell obspy the format, so that it does not have to read the huge file several times to check the format itself.
+Traces ar now passed to apply and removed from memory afterwards. Read returns a dummy stream in this case. ::
+
+    >>> dummy = read('huge_in.h5', 'H5', apply2trace=apply)
+    >>> print dummy
     1 Trace(s) in Stream:
     ... | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
 
 Alternative indexing
 ^^^^^^^^^^^^^^^^^^^^
-obspyh5 supports alternative indexing for writing cross-correlated traces.
-Therefore stats needs the entries 'network1', 'station1', 'location1',
-'channel1', 'network2', 'station2', 'location2', channel2'
-of the first and second station, respectively. Usage: ::
+obspyh5 supports alternative indexing. ::
+
+    >>> from obspy import read
+    >>> import obspyh5
+    >>> print obspyh5._INDEX  # default index
+    {network}.{station}/{location}.{channel}/{starttime.datetime:%Y-%m-%dT%H:%M:%S}_{endtime.datetime:%Y-%m-%dT%H:%M:%S}
+
+The index gets populated by the stats object when writing a trace, e.g. ::
+
+    >>> stats = read()[0].stats
+    >>> print obspyh5._INDEX.format(**stats)
+    'BW.RJOB/.EHZ/2009-08-24T00:20:03_2009-08-24T00:20:32'
+
+To change the index use set_index. ::
+
+    >>> obspyh5.set_index('xcorr')  # xcorr indexing
+    >>> obspyh5.set_index('{newtork}.{station}/{distance}')  # custom indexing
+
+When using the 'xcorr' indexing stats needs the entries 'network1', 'station1',
+'location1', 'channel1', 'network2', 'station2', 'location2' and 'channel2'
+of the first and second station. An example: ::
 
     >>> from obspy import read
     >>> import obspyh5
@@ -80,8 +100,6 @@ of the first and second station, respectively. Usage: ::
     ST1.HHZ.ST0.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     ST1.HHZ.ST1.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     ST1.HHZ.ST2.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
-
-The index can be set to a custom value.
 
 Note
 ^^^^

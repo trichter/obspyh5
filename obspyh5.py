@@ -9,8 +9,12 @@ Welcome!
 Saves and writes ObsPy streams to hdf5 files.
 Stats attributes are preserved if they are numbers, strings,
 UTCDateTime objects or numpy arrays.
-You can use it as a plugin to obspy or you can use the internal api
-e.g. to iterate over traces in a huge hdf5 file.
+Its best used as a plugin to obspy.
+
+For a some examples have a look at the README.rst_.
+
+.. _README.rst: https://github.com/trichter/obspyh5
+
 """
 
 from numpy import string_
@@ -44,9 +48,21 @@ def _is_utc(utc):
 
 def set_index(index='standard'):
     """
-    Set index
+    Set index.
 
-    Possible values: 'standard', 'xcorr' or index itself.
+    Some indexes are hold by the module variable _INDEXES ('standard' and
+    'xcorr'). The index can also be set to a custom value, e.g.
+
+    >>> set_index('{network}.{station}/{otherstrangeheader}')
+
+    This string gets evaluated by a call to its format method,
+    with the stats of each trace as kwargs, e.g.
+
+    >>> '{network}.{station}/{otherstrangeheader}'.format(**stats)
+
+    This means, that headers used in the index must exist for a trace to write.
+
+    :param index: 'standard' (default), 'xcorr' or other string.
     """
     global _INDEX
     if index in _INDEXES.keys():
@@ -57,7 +73,7 @@ def set_index(index='standard'):
 
 def is_obspyh5(fname):
     """
-    Check if file is hdf5 file and if it was written by obspyh5
+    Check if file is a hdf5 file and if it was written by obspyh5.
     """
     try:
         if not h5py.is_hdf5(fname):
@@ -67,16 +83,29 @@ def is_obspyh5(fname):
     except:
         return False
 
-_return_value_apply2trace = [None]
+
 def read_hdf5(fname, mode='r', group='/waveforms', headonly=False,
               apply2trace=None, **kwargs):
-    # These keywords get handled inside obspy
-    if apply2trace is None:
-        for key in ('nearest_sample', 'starttime', 'endtime'):
-            try:
-                del kwargs[key]
-            except KeyError:
-                pass
+    """
+    Read hdf5 file and return Stream object.
+
+    :param fname: name of file to read
+    :param mode: 'r' (read-only, default), 'a' (append) or other.
+        Argument is passed to h5py.File. Use 'a' if you want to write in the
+        same file, while it is open for reading.
+    :param group: group or subgroup to read, defaults to '/waveforms'
+        This can alos point to a dataset. group can be used to read only a
+        part of the hdf5 file.
+    :param headonly: read only the headers of the traces
+    :param apply2trace: None (default) or func
+        None -> read_hdf5 reads whole file and returns a Stream object.
+        func -> Useful for huge files. Each read trace gets passed to the
+                function func so that the trace can be processed but does not
+                have to stay in memory. If func returns anything else than
+                None read_hdf5 will stop reading the file. Note: read_hdf5
+                will return a stream with on dummy trace in this case.
+    :param **kwargs: other kwargs are ignored!
+    """
     with h5py.File(fname, mode) as f:
         def _apply2item(index, dataset):
             if isinstance(dataset, h5py.Dataset):
@@ -96,15 +125,35 @@ def read_hdf5(fname, mode='r', group='/waveforms', headonly=False,
 
 
 def write_hdf5(stream, fname, mode='w', group='/waveforms', **kwargs):
+    """
+    Write stream to hdf5 file.
+
+    :param stream: Stream to write.
+    :param fname: hdf5 filename
+    :param mode: 'w' (write, default), 'a' (append) or other.
+        Argument is passed to h5py.File. Use 'a' to write into an existing
+        file. 'w' will create a new empty file in any case.
+    :param group: defaults to '/waveforms', not recommended to change.
+    :param override: 'warn' (default, warn and override), 'raise' (raise
+        Exception), 'ignore' (override, without warning), 'dont' (do not
+        override, without warning).
+        Behaviour if dataset with the same index already exists.
+    :param ignore: iterable
+        Do not write headers listed inside ignore. Additionally the headers
+        'endtime', 'sampling_rate', 'npts' and '_format' are ignored.
+    :param **kwargs: Additional kwargs are passed to create_dataset in h5py.
+    """
     if not splitext(fname)[1]:
         fname = fname + '.h5'
     with h5py.File(fname, mode, libver='latest') as f:
         f.attrs['file_format'] = 'obspyh5'
-        stream2hdf(stream, f.require_group(group), **kwargs)
+        group = f.require_group(group)
+        for tr in stream:
+            trace2hdf(tr, group, **kwargs)
 
 
 def trace2hdf(trace, group, override='warn', ignore=(), **kwargs):
-    """Write trace into group"""
+    """Write trace into group."""
     if override not in ('warn', 'raise', 'ignore', 'dont'):
         msg = "Override has to be one of ('warn', 'raise', 'ignore', 'dont')."
         raise ValueError(msg)
@@ -134,21 +183,15 @@ def trace2hdf(trace, group, override='warn', ignore=(), **kwargs):
                           "types and UTCDateTime are supported.") % key)
 
 
-def stream2hdf(stream, group, **kwargs):
-    """Write stream into group"""
-    for tr in stream:
-        trace2hdf(tr, group, **kwargs)
-
-
 def dataset2trace(dataset, headonly=False):
-    """Load trace from dataset"""
+    """Load trace from dataset."""
     stats = dict(dataset.attrs)
     for key, val in stats.items():
         if _is_utc(val):
             stats[key] = UTC(val)
     if headonly:
         stats['npts'] = len(dataset)
-        tr = Trace(header=stats)
+        trace = Trace(header=stats)
     else:
-        tr = Trace(data=dataset[...], header=stats)
-    return tr
+        trace = Trace(data=dataset[...], header=stats)
+    return trace

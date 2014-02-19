@@ -2,12 +2,12 @@ import unittest
 import warnings
 
 import numpy as np
-from obspy.core.util import NamedTemporaryFile
 from obspy import read
 from obspy.core import UTCDateTime as UTC
-from obspyh5 import (read_hdf5, write_hdf5, trace2hdf)
-import obspyh5
+from obspy.core.util import NamedTemporaryFile
+from obspyh5 import read_hdf5, write_hdf5, trace2hdf
 import h5py
+import obspyh5
 
 
 class HDF5TestCase(unittest.TestCase):
@@ -117,7 +117,6 @@ class HDF5TestCase(unittest.TestCase):
             stream.write(fname, 'H5')
             traces = []
             stream2 = read(fname, apply2trace=traces.append)
-            print stream2
             self.assertEqual(len(stream2), 1)
             self.assertEqual(len(stream2[0]), 0)
             self.assertEqual(stream.traces, traces)
