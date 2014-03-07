@@ -5,7 +5,7 @@ import numpy as np
 from obspy import read
 from obspy.core import UTCDateTime as UTC
 from obspy.core.util import NamedTemporaryFile
-from obspyh5 import read_hdf5, write_hdf5, trace2hdf, iter_hdf5
+from obspyh5 import readh5, writeh5, trace2group, iterh5
 import h5py
 import obspyh5
 
@@ -64,15 +64,15 @@ class HDF5TestCase(unittest.TestCase):
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
             # write stream and read again, append data
-            write_hdf5(stream[:1], fname)
+            writeh5(stream[:1], fname)
             self.assertTrue(obspyh5.is_obspyh5(fname))
-            stream2 = read_hdf5(fname)
-            write_hdf5(stream[1:], fname, mode='a')
-            stream3 = read_hdf5(fname)
+            stream2 = readh5(fname)
+            writeh5(stream[1:], fname, mode='a')
+            stream3 = readh5(fname)
             self.assertEqual(stream[:1], stream2)
             self.assertEqual(stream, stream3)
             # read only header
-            stream3 = read_hdf5(fname, headonly=True)
+            stream3 = readh5(fname, headonly=True)
             self.assertEqual(stream2[0].stats, stream3[0].stats)
             self.assertEqual(len(stream3[0].data), 0)
             # test if group was really created
@@ -83,9 +83,9 @@ class HDF5TestCase(unittest.TestCase):
             stream[0].stats.toomuch = {1: 3}
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
-                write_hdf5(stream, fname)
+                writeh5(stream, fname)
                 self.assertEqual(len(w), 1)
-            stream2 = read_hdf5(fname)
+            stream2 = readh5(fname)
             # stream/stats comparison not working for arrays
             # therefore checking directly
             np.testing.assert_array_equal(stream[0].stats.num,
@@ -98,28 +98,16 @@ class HDF5TestCase(unittest.TestCase):
         stream = self.stream
         with NamedTemporaryFile(suffix='.h5') as ft:
             with h5py.File(ft.name) as f:
-                trace2hdf(stream[0], f)
+                trace2group(stream[0], f)
                 # test override
                 with warnings.catch_warnings(record=True) as w:
                     warnings.simplefilter("always")
-                    trace2hdf(stream[0], f)
+                    trace2group(stream[0], f)
                     self.assertEqual(len(w), 1)
                 with self.assertRaises(KeyError):
-                    trace2hdf(stream[0], f, key=None, override='raise')
+                    trace2group(stream[0], f, key=None, override='raise')
                 # is_obspyh5 is only working with file names
                 self.assertFalse(obspyh5.is_obspyh5(f))
-
-    def test_hdf5_apply2trace(self):
-        obspyh5.set_index()
-        stream = self.stream
-        with NamedTemporaryFile(suffix='.h5') as ft:
-            fname = ft.name
-            stream.write(fname, 'H5')
-            traces = []
-            stream2 = read(fname, apply2trace=traces.append)
-            self.assertEqual(len(stream2), 1)
-            self.assertEqual(len(stream2[0]), 0)
-            self.assertEqual(stream.traces, traces)
 
     def test_hdf5_iter(self):
         obspyh5.set_index()
@@ -128,7 +116,7 @@ class HDF5TestCase(unittest.TestCase):
             fname = ft.name
             stream.write(fname, 'H5')
             traces = []
-            for tr in iter_hdf5(fname):
+            for tr in iterh5(fname):
                 traces.append(tr)
             self.assertEqual(stream.traces, traces)
 

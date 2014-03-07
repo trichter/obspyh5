@@ -4,8 +4,8 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform': ['H5 = obspyh5'],
     'obspy.plugin.waveform.H5': [
         'isFormat = obspyh5:is_obspyh5',
-        'readFormat = obspyh5:read_hdf5',
-        'writeFormat = obspyh5:write_hdf5']}
+        'readFormat = obspyh5:readh5',
+        'writeFormat = obspyh5:writeh5']}
 
 setup(name='obspyh5',
       version='0.0.1.dev',

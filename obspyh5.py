@@ -84,26 +84,24 @@ def is_obspyh5(fname):
         return False
 
 
-def iter_hdf5(fname, mode='r', group='/waveforms', headonly=False):
+def iterh5(fname, mode='r', group='/waveforms', headonly=False):
     """
-    Iterate over traces in hdf5 file. See read_hdf5 for doc of kwargs.
+    Iterate over traces in hdf5 file. See readh5 for doc of kwargs.
     """
-    with h5py.File(fname, mode) as f:
-        def _apply2item(index, dataset):
-            if isinstance(dataset, h5py.Dataset):
-                keys.append(index)
-        keys = []
-        group = f[group]
+    def visit(group):
+        """Visit all items iteratively and yield datasets as traces."""
         if isinstance(group, h5py.Dataset):
             yield dataset2trace(group, headonly=headonly)
         else:
-            group.visititems(_apply2item)
-            for key in keys:
-                yield dataset2trace(group[key], headonly=headonly)
+            for sub in group:
+                for subgroup in visit(group[sub]):
+                    yield subgroup
+    with h5py.File(fname, mode) as f:
+        for v in visit(f[group]):
+            yield v
 
 
-def read_hdf5(fname, mode='r', group='/waveforms', headonly=False,
-              apply2trace=None, **kwargs):
+def readh5(fname, mode='r', group='/waveforms', headonly=False, **kwargs):
     """
     Read hdf5 file and return Stream object.
 
@@ -115,34 +113,15 @@ def read_hdf5(fname, mode='r', group='/waveforms', headonly=False,
         This can alos point to a dataset. group can be used to read only a
         part of the hdf5 file.
     :param headonly: read only the headers of the traces
-    :param apply2trace: None (default) or func
-        None -> read_hdf5 reads whole file and returns a Stream object.
-        func -> Useful for huge files. Each read trace gets passed to the
-                function func so that the trace can be processed but does not
-                have to stay in memory. If func returns anything else than
-                None read_hdf5 will stop reading the file. Note: read_hdf5
-                will return a stream with on dummy trace in this case.
     :param **kwargs: other kwargs are ignored!
     """
-    with h5py.File(fname, mode) as f:
-        def _apply2item(index, dataset):
-            if isinstance(dataset, h5py.Dataset):
-                tr = dataset2trace(dataset, headonly=headonly)
-                return apply2trace(tr)
-        group = f[group]
-        if apply2trace is None:
-            traces = []
-            apply2trace = traces.append
-        else:
-            traces = [Trace()]
-        if isinstance(group, h5py.Dataset):
-            _apply2item(None, group)
-        else:
-            group.visititems(_apply2item)
+    traces = []
+    for tr in iterh5(fname, mode=mode, group=group, headonly=headonly):
+        traces.append(tr)
     return Stream(traces=traces)
 
 
-def write_hdf5(stream, fname, mode='w', group='/waveforms', **kwargs):
+def writeh5(stream, fname, mode='w', group='/waveforms', **kwargs):
     """
     Write stream to hdf5 file.
 
@@ -167,10 +146,10 @@ def write_hdf5(stream, fname, mode='w', group='/waveforms', **kwargs):
         f.attrs['file_format'] = 'obspyh5'
         group = f.require_group(group)
         for tr in stream:
-            trace2hdf(tr, group, **kwargs)
+            trace2group(tr, group, **kwargs)
 
 
-def trace2hdf(trace, group, override='warn', ignore=(), **kwargs):
+def trace2group(trace, group, override='warn', ignore=(), **kwargs):
     """Write trace into group."""
     if override not in ('warn', 'raise', 'ignore', 'dont'):
         msg = "Override has to be one of ('warn', 'raise', 'ignore', 'dont')."

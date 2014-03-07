@@ -22,7 +22,7 @@ or download and run::
 
 Usage
 ^^^^^
-Basic example::
+Basic example using the obspy plugin::
 
     >>> from obspy import read
     >>> stream = read()  # load example stream
@@ -38,30 +38,14 @@ Basic example::
     BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
 
-Example to iterate over traces in hdf5 file::
+Example iterating over traces in a huge hdf5 file. After each iteration the
+trace is not kept in memory and therefore it is possible to process the hdf5
+file on a PC without problems. ::
 
-    >>> from obspyh5 import iter_hdf5
-    >>> for trace in iter_hdf5('huge_in.h5')
+    >>> from obspyh5 import iterh5
+    >>> for trace in iterh5('huge_in.h5')
             trace.do_something()
             trace.write('huge_out.h5', 'H5', mode='a')  # append mode to write into file
-
-
-Example using apply2trace keyword to process traces "on the fly".: ::
-
-    >>> from obspy import read
-    >>> def apply(trace):
-            trace.do_something()
-            trace.write('huge_out.h5', 'H5', mode='a')  # append mode to write into file
-
-We tell obspy the format, so that it does not have to read the huge file several times to check the format itself.
-Traces ar now passed to apply and removed from memory afterwards. Read returns a dummy stream in this case. ::
-
-    >>> dummy = read('huge_in.h5', 'H5', apply2trace=apply)
-    >>> print dummy
-    1 Trace(s) in Stream:
-    ... | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples
-
-Both interfaces (iterate_hdf5 and apply2trace kwarg) allow iterating over traces in a huge file.
 
 Alternative indexing
 ^^^^^^^^^^^^^^^^^^^^
