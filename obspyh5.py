@@ -84,6 +84,24 @@ def is_obspyh5(fname):
         return False
 
 
+def iter_hdf5(fname, mode='r', group='/waveforms', headonly=False):
+    """
+    Iterate over traces in hdf5 file. See read_hdf5 for doc of kwargs.
+    """
+    with h5py.File(fname, mode) as f:
+        def _apply2item(index, dataset):
+            if isinstance(dataset, h5py.Dataset):
+                keys.append(index)
+        keys = []
+        group = f[group]
+        if isinstance(group, h5py.Dataset):
+            yield dataset2trace(group, headonly=headonly)
+        else:
+            group.visititems(_apply2item)
+            for key in keys:
+                yield dataset2trace(group[key], headonly=headonly)
+
+
 def read_hdf5(fname, mode='r', group='/waveforms', headonly=False,
               apply2trace=None, **kwargs):
     """
