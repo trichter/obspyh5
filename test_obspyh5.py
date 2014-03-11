@@ -26,7 +26,6 @@ class HDF5TestCase(unittest.TestCase):
         self.assertFalse(obspyh5._is_utc(110))
 
     def test_hdf5_plugin(self):
-        obspyh5.set_index()
         stream = self.stream
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
@@ -56,10 +55,10 @@ class HDF5TestCase(unittest.TestCase):
             stream2 = read(fname).sort()
         for tr in stream2:
             del tr.stats._format
+        obspyh5.set_index()
         self.assertEqual(stream, stream2)
 
     def test_hdf5_basic(self):
-        obspyh5.set_index()
         stream = self.stream
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
@@ -94,7 +93,6 @@ class HDF5TestCase(unittest.TestCase):
             del stream[0].stats.toomuch
 
     def test_hdf5_interface(self):
-        obspyh5.set_index()
         stream = self.stream
         with NamedTemporaryFile(suffix='.h5') as ft:
             with h5py.File(ft.name) as f:
@@ -110,7 +108,6 @@ class HDF5TestCase(unittest.TestCase):
                 self.assertFalse(obspyh5.is_obspyh5(f))
 
     def test_hdf5_iter(self):
-        obspyh5.set_index()
         stream = self.stream
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
@@ -119,6 +116,19 @@ class HDF5TestCase(unittest.TestCase):
             for tr in iterh5(fname):
                 traces.append(tr)
             self.assertEqual(stream.traces, traces)
+
+    def test_hdf5_readonly(self):
+        stream = self.stream
+        with NamedTemporaryFile(suffix='.h5') as ft:
+            fname = ft.name
+            stream.write(fname, 'H5')
+            ro = {'network': 'BW', 'station': 'RJOB', 'location': '',
+                  'channel': 'EHE'}
+            stream2 = read(fname, 'H5', readonly=ro)
+            self.assertEqual(stream[0].id, stream2[0].id)
+            ro = {'network': 'BW', 'station': 'RJOB'}
+            stream2 = read(fname, 'H5', readonly=ro)
+            self.assertEqual(len(stream2), 3)
 
 
 def suite():

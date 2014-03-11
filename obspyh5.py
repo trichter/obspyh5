@@ -84,7 +84,7 @@ def is_obspyh5(fname):
         return False
 
 
-def iterh5(fname, mode='r', group='/waveforms', headonly=False):
+def iterh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None):
     """
     Iterate over traces in hdf5 file. See readh5 for doc of kwargs.
     """
@@ -96,12 +96,22 @@ def iterh5(fname, mode='r', group='/waveforms', headonly=False):
             for sub in group:
                 for subgroup in visit(group[sub]):
                     yield subgroup
+    if readonly is not None:
+        index1 = _INDEX.split('/')
+        index2 = []
+        for i in index1:
+            try:
+                index2.append(i.format(**readonly))
+            except KeyError:
+                break
+        group = '/'.join([group] + index2)
     with h5py.File(fname, mode) as f:
         for v in visit(f[group]):
             yield v
 
 
-def readh5(fname, mode='r', group='/waveforms', headonly=False, **kwargs):
+def readh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None,
+           **kwargs):
     """
     Read hdf5 file and return Stream object.
 
@@ -113,10 +123,20 @@ def readh5(fname, mode='r', group='/waveforms', headonly=False, **kwargs):
         This can alos point to a dataset. group can be used to read only a
         part of the hdf5 file.
     :param headonly: read only the headers of the traces
+    :param readonly: read only traces determined by given dict.
+        E.g. readonly={'network':'CX', 'station':'PB01'} will return traces
+        from CX.PB01. This will only work if the index is the same as it was
+        for wrting the stream. Additionally the index has to be
+        filled from the beginning to represent a hdf5 group.
+        E.g. with the standard index a dict with the following keys will work:
+        ('network', 'station'),
+        ('network', 'station', 'location', 'channel') or
+        ('network', 'station', 'location', 'channel', 'starttime', 'endtime').
     :param **kwargs: other kwargs are ignored!
     """
     traces = []
-    for tr in iterh5(fname, mode=mode, group=group, headonly=headonly):
+    for tr in iterh5(fname, mode=mode, group=group, headonly=headonly,
+                     readonly=readonly):
         traces.append(tr)
     return Stream(traces=traces)
 
