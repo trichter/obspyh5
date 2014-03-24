@@ -3,20 +3,29 @@ obspyh5
 hdf5 write/read support for obspy
 ---------------------------------
 
+:Author: Tom Richter
+:License: MIT
+:Project page: https://github.com/trichter/obspyh5
+:Pypi page: https://pypi.python.org/pypi/obspyh5
+
+
 Welcome!
 
 Saves and writes ObsPy streams to hdf5 files.
 Stats attributes are preserved if they are numbers, strings,
 UTCDateTime objects or numpy arrays.
-Its best used as a plugin to obspy.
+It can be used as a plugin to obspy's read function to read a whole hdf5 file.
+Alternatively you can iterate over the traces in a hdf5 file with the iterh5
+function.
 
 Installation
 ^^^^^^^^^^^^
-Requires obspy and h5py. Install by::
+Install h5py and obspy. After that install obspyh5 using pip by::
 
-    pip install https://github.com/trichter/obspyh5/archive/master.zip
+    pip install obspyh5
 
-or download and run::
+Alternatively you can install obspyh5 by downloading the source code and
+running::
 
     python setup.py install
 
@@ -39,7 +48,7 @@ Basic example using the obspy plugin::
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
 
 Example iterating over traces in a huge hdf5 file. After each iteration the
-trace is not kept in memory and therefore it is possible to process the hdf5
+trace is not kept in memory and therefore it is possible to process a huge hdf5
 file on a PC without problems. ::
 
     >>> from obspyh5 import iterh5
@@ -97,7 +106,6 @@ of the first and second station. An example: ::
 
 Note
 ^^^^
-This module is experimental and the interface possibly changes with time.
-Development stays on a low level in favour of sdf_.
+I hope that this module can be replaced soon by sdf_.
 
 .. _sdf: https://github.com/krischer/SDF/wiki
