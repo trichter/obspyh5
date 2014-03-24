@@ -3,13 +3,12 @@ obspyh5
 hdf5 write/read support for obspy
 ---------------------------------
 
-:Author: Tom Richter
-:License: MIT
-:Project page: https://github.com/trichter/obspyh5
-:Pypi page: https://pypi.python.org/pypi/obspyh5
-
-
 Welcome!
+
+| **Author**: Tom Richter
+| **License**: MIT
+| **Project page**: https://github.com/trichter/obspyh5
+| **Pypi page**: https://pypi.python.org/pypi/obspyh5
 
 Saves and writes ObsPy streams to hdf5 files.
 Stats attributes are preserved if they are numbers, strings,
