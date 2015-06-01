@@ -20,7 +20,7 @@ before_install:
   - conda info -a
   # Install deps
   - conda config --add channels obspy  
-  - conda install python=$TRAVIS_PYTHON_VERSION numpy obspy h5py
+  - conda install python=$TRAVIS_PYTHON_VERSION numpy nose obspy cython h5py
 
 install:
   - pip install --no-deps .
