@@ -168,7 +168,6 @@ def writeh5(stream, fname, mode='w', group='/waveforms', **kwargs):
         for tr in stream:
             trace2group(tr, group, **kwargs)
 
-
 def trace2group(trace, group, override='warn', ignore=(), **kwargs):
     """Write trace into group."""
     if override not in ('warn', 'raise', 'ignore', 'dont'):
@@ -195,7 +194,7 @@ def trace2group(trace, group, override='warn', ignore=(), **kwargs):
             else:
                 try:
                     dataset.attrs[key] = val
-                except TypeError:
+                except (KeyError, TypeError):
                     warn(("Writing header '%s' is not supported. Only h5py "
                           "types and UTCDateTime are supported.") % key)
 

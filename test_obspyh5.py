@@ -77,19 +77,21 @@ class HDF5TestCase(unittest.TestCase):
             # test if group was really created
             with h5py.File(fname) as f:
                 self.assertTrue('waveforms' in f)
-            # test numpy headers, check for warning
+#            # test numpy headers
             stream[0].stats.num = np.array([[5, 4, 3], [1, 2, 3.]])
-            stream[0].stats.toomuch = {1: 3}
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                writeh5(stream, fname)
-                self.assertEqual(len(w), 1)
+            writeh5(stream, fname)
             stream2 = readh5(fname)
             # stream/stats comparison not working for arrays
             # therefore checking directly
             np.testing.assert_array_equal(stream[0].stats.num,
                                           stream2[0].stats.num)
             del stream[0].stats.num
+            # check for warning for unsupported types
+            stream[0].stats.toomuch = {1: 3}
+            with warnings.catch_warnings(record=True) as w:
+                writeh5(stream, fname)
+                warnings.simplefilter("always")
+                self.assertEqual(len(w), 1)
             del stream[0].stats.toomuch
 
     def test_hdf5_interface(self):
