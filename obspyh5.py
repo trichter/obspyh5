@@ -24,11 +24,14 @@ from future.builtins import (  # analysis:ignore
     bytes, dict, int, list, object, range, str,
     ascii, chr, hex, input, next, oct, open,
     pow, round, super, map, zip)
+import sys
+IS_PY3 = sys.major_version == 3
 
 from numpy import string_
 from os.path import splitext
 from warnings import warn
 from obspy.core import Trace, Stream, UTCDateTime as UTC
+
 
 try:
     import h5py
@@ -211,6 +214,9 @@ def dataset2trace(dataset, headonly=False):
     """Load trace from dataset."""
     stats = dict(dataset.attrs)
     for key, val in stats.items():
+        # next two lines are a quick and dirty hack for Python3
+        if IS_PY3 and isinstance(val, bytes):
+            stats[key] = val = val.decode('utf-8')
         if _is_utc(val):
             stats[key] = UTC(val)
     if headonly:
