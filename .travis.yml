@@ -2,8 +2,6 @@ language: python
 python:
   - "2.7"
   - "3.4"
-virtualenv:
-  system_site_packages: true
 before_install:
   - sudo apt-get update
   # We do this conditionally because it saves us some downloading if the
@@ -25,10 +23,9 @@ before_install:
   - conda install python=$TRAVIS_PYTHON_VERSION numpy obspy h5py
 
 install:
-  - pip install .
+  - pip install --no-deps .
 script:
-  - mkdir empty
-  - cd empty
+  - mkdir empty; cd empty
   - python ../test_obspyh5.py
 after_success:
 notifications:
