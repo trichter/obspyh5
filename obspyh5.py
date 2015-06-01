@@ -17,6 +17,14 @@ For some examples have a look at the README.rst_.
 
 """
 
+# The following lines are for Py2/Py3 support with the future module.
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+from future.builtins import (  # analysis:ignore
+    bytes, dict, int, list, object, range, str,
+    ascii, chr, hex, input, next, oct, open,
+    pow, round, super, map, zip)
+
 from numpy import string_
 from os.path import splitext
 from warnings import warn
@@ -189,7 +197,7 @@ def trace2group(trace, group, override='warn', ignore=(), **kwargs):
     dataset[:] = trace.data
     for key, val in trace.stats.items():
         if key not in ignore:
-            if isinstance(val, basestring) or _is_utc(val):
+            if isinstance(val, str) or _is_utc(val):
                 dataset.attrs[key] = string_(val)
             else:
                 try:
