@@ -1,9 +1,11 @@
 from setuptools import setup
 
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 
 with open('README.rst') as f:
     README = f.read()
+if not 'dev' in VERSION:  # get image for correct version from travis-ci
+    README = README.replace('branch=master', 'branch=v%s' % VERSION)
 DESCRIPTION = README.split('\n')[2]
 LONG_DESCRIPTION = '\n'.join(README.split('\n')[5:])
 
