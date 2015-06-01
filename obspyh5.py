@@ -25,7 +25,7 @@ from future.builtins import (  # analysis:ignore
     ascii, chr, hex, input, next, oct, open,
     pow, round, super, map, zip)
 import sys
-IS_PY3 = sys.major_version == 3
+IS_PY3 = sys.version_info.major == 3
 
 from numpy import string_
 from os.path import splitext
