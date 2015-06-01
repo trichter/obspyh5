@@ -9,6 +9,11 @@ Welcome!
 | **License**: MIT
 | **Project page**: https://github.com/trichter/obspyh5
 | **Pypi page**: https://pypi.python.org/pypi/obspyh5
+| **Test status**: |buildstatus|
+
+.. |buildstatus| image:: https://api.travis-ci.org/trichter/obspyh5.png?
+    branch=master
+   :target: https://travis-ci.org/trichter/obspyh5
 
 Saves and writes ObsPy streams to hdf5 files.
 Stats attributes are preserved if they are numbers, strings,
