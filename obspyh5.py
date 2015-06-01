@@ -11,7 +11,7 @@ Stats attributes are preserved if they are numbers, strings,
 UTCDateTime objects or numpy arrays.
 Its best used as a plugin to obspy.
 
-For a some examples have a look at the README.rst_.
+For some examples have a look at the README.rst_.
 
 .. _README.rst: https://github.com/trichter/obspyh5
 

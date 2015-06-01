@@ -5,7 +5,7 @@ hdf5 write/read support for obspy
 
 Welcome!
 
-| **Author**: Tom Richter
+| **Author**: Tom Eulenfeld
 | **License**: MIT
 | **Project page**: https://github.com/trichter/obspyh5
 | **Pypi page**: https://pypi.python.org/pypi/obspyh5
