@@ -1,3 +1,5 @@
+v0.2.1:
+   * add future as dependency
 v0.2.0:
    * support for Python3
 v0.1.0:

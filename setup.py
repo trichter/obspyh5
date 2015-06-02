@@ -1,6 +1,6 @@
 from setuptools import setup
 
-VERSION = '0.2.0'
+VERSION = '0.2.1'
 
 with open('README.rst') as f:
     README = f.read()
@@ -25,7 +25,7 @@ setup(name='obspyh5',
       author_email='tom.eulenfeld@gmail.com',
       license='MIT',
       py_modules=['obspyh5'],
-      install_requires=['obspy', 'h5py', 'numpy'],
+      install_requires=['future', 'obspy', 'h5py', 'numpy'],
       entry_points=ENTRY_POINTS,
       zip_safe=False,
       include_package_data=True
