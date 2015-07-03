@@ -110,6 +110,6 @@ of the first and second station. An example: ::
 
 Note
 ^^^^
-I hope that this module can be replaced soon by sdf_.
+See also ASDF_ for a more comprehensive approach.
 
-.. _sdf: https://github.com/krischer/SDF/wiki
+.. _ASDF: https://github.com/krischer/ASDF
