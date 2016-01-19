@@ -1,3 +1,6 @@
+dev:
+   * add headonly argument to writeh5 to support writing of the stats
+     dictionary into an existing HDF5 database
 v0.2.1:
    * add future as dependency
 v0.2.0:

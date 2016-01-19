@@ -152,7 +152,8 @@ def readh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None,
     return Stream(traces=traces)
 
 
-def writeh5(stream, fname, mode='w', group='/waveforms', **kwargs):
+def writeh5(stream, fname, mode='w', group='/waveforms', headonly=False,
+            **kwargs):
     """
     Write stream to hdf5 file.
 
@@ -162,30 +163,37 @@ def writeh5(stream, fname, mode='w', group='/waveforms', **kwargs):
         Argument is passed to h5py.File. Use 'a' to write into an existing
         file. 'w' will create a new empty file in any case.
     :param group: defaults to '/waveforms', not recommended to change.
+    :param headonly: write only the header of the traces
     :param override: 'warn' (default, warn and override), 'raise' (raise
         Exception), 'ignore' (override, without warning), 'dont' (do not
         override, without warning).
         Behaviour if dataset with the same index already exists.
+        For headonly=True this parameter is ignored.
     :param ignore: iterable
         Do not write headers listed inside ignore. Additionally the headers
         'endtime', 'sampling_rate', 'npts' and '_format' are ignored.
+        'npts' is written for headonly=True.
     :param **kwargs: Additional kwargs are passed to create_dataset in h5py.
     """
+    if headonly and format == 'w':
+        raise ValueError("headonly=True is only supported for format='a'")
     if not splitext(fname)[1]:
         fname = fname + '.h5'
     with h5py.File(fname, mode, libver='latest') as f:
         f.attrs['file_format'] = 'obspyh5'
         group = f.require_group(group)
         for tr in stream:
-            trace2group(tr, group, **kwargs)
+            trace2group(tr, group, headonly=headonly, **kwargs)
 
-def trace2group(trace, group, override='warn', ignore=(), **kwargs):
+
+def trace2group(trace, group, headonly=False, override='warn', ignore=(),
+                **kwargs):
     """Write trace into group."""
     if override not in ('warn', 'raise', 'ignore', 'dont'):
         msg = "Override has to be one of ('warn', 'raise', 'ignore', 'dont')."
         raise ValueError(msg)
     index = _INDEX.format(**trace.stats)
-    if index in group:
+    if index in group and not headonly:
         msg = "Index '%s' already exists." % index
         if override == 'warn':
             warn(msg + ' Will override trace.')
@@ -194,10 +202,18 @@ def trace2group(trace, group, override='warn', ignore=(), **kwargs):
         elif override == 'dont':
             return
         del group[index]
-    dataset = group.create_dataset(index, trace.data.shape, trace.data.dtype,
-                                   **kwargs)
+    if headonly:
+        try:
+            dataset = group[index]
+        except KeyError:
+            msg = ("Index '%s' does not exist. headonly=True only supports "
+                   "writing headers of existing data.")
+            raise KeyError(msg % index)
+    else:
+        dataset = group.create_dataset(index, trace.data.shape,
+                                       trace.data.dtype, **kwargs)
+        dataset[:] = trace.data
     ignore = tuple(ignore) + _IGNORE
-    dataset[:] = trace.data
     for key, val in trace.stats.items():
         if key not in ignore:
             if isinstance(val, str) or _is_utc(val):

@@ -140,6 +140,22 @@ class HDF5TestCase(unittest.TestCase):
             stream2 = read(fname, 'H5', readonly=ro)
             self.assertEqual(len(stream2), 3)
 
+    def test_hdf5_headonly(self):
+        stream = self.stream
+        with NamedTemporaryFile(suffix='.h5') as ft:
+            fname = ft.name
+            stream.write(fname, 'H5')
+            stream2 = read(fname, 'H5', headonly=True)
+            stream2[0].stats.header = -42
+            self.assertEqual(len(stream2[0]), 0)
+            stream2.write(fname, 'H5', mode='a', headonly=True)
+            stream2 = read(fname, 'H5')
+            self.assertEqual(stream2[0].stats.header, -42)
+            stream2[0].stats.header = 42
+            for tr in stream2:
+                del tr.stats._format
+            self.assertEqual(stream, stream2)
+
 
 def suite():
     return unittest.makeSuite(HDF5TestCase, 'test')
