@@ -59,7 +59,7 @@ def _is_utc(utc):
 
 def set_index(index='standard'):
     """
-    Set index.
+    Set index for newly created files.
 
     Some indexes are hold by the module variable _INDEXES ('standard' and
     'xcorr'). The index can also be set to a custom value, e.g.
@@ -72,6 +72,7 @@ def set_index(index='standard'):
     >>> '{network}.{station}/{otherstrangeheader}'.format(**stats)
 
     This means, that headers used in the index must exist for a trace to write.
+    The index is stored inside the HDF5 file.
 
     :param index: 'standard' (default), 'xcorr' or other string.
     """
@@ -107,16 +108,20 @@ def iterh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None):
             for sub in group:
                 for subgroup in visit(group[sub]):
                     yield subgroup
-    if readonly is not None:
-        index1 = _INDEX.split('/')
-        index2 = []
-        for i in index1:
-            try:
-                index2.append(i.format(**readonly))
-            except KeyError:
-                break
-        group = '/'.join([group] + index2)
     with h5py.File(fname, mode) as f:
+        if readonly is not None:
+            try:
+                index = f.attrs['index']
+            except KeyError:
+                index = _INDEX
+            index1 = index.split('/')
+            index2 = []
+            for i in index1:
+                try:
+                    index2.append(i.format(**readonly))
+                except KeyError:
+                    break
+            group = '/'.join([group] + index2)
         for v in visit(f[group]):
             yield v
 
@@ -181,6 +186,8 @@ def writeh5(stream, fname, mode='w', group='/waveforms', headonly=False,
         fname = fname + '.h5'
     with h5py.File(fname, mode, libver='latest') as f:
         f.attrs['file_format'] = 'obspyh5'
+        if 'index' not in f.attrs:
+            f.attrs['index'] = _INDEX
         group = f.require_group(group)
         for tr in stream:
             trace2group(tr, group, headonly=headonly, **kwargs)
@@ -192,7 +199,11 @@ def trace2group(trace, group, headonly=False, override='warn', ignore=(),
     if override not in ('warn', 'raise', 'ignore', 'dont'):
         msg = "Override has to be one of ('warn', 'raise', 'ignore', 'dont')."
         raise ValueError(msg)
-    index = _INDEX.format(**trace.stats)
+    try:
+        index = group.file.attrs['index']
+    except KeyError:
+        index = group.file.attrs['index'] = _INDEX
+    index = index.format(**trace.stats)
     if index in group and not headonly:
         msg = "Index '%s' already exists." % index
         if override == 'warn':

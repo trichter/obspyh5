@@ -9,12 +9,12 @@ from future.builtins import (  # analysis:ignore
 import unittest
 import warnings
 
+import h5py
 import numpy as np
 from obspy import read
 from obspy.core import UTCDateTime as UTC
 from obspy.core.util import NamedTemporaryFile
-from obspyh5 import readh5, writeh5, trace2group, iterh5
-import h5py
+from obspyh5 import readh5, writeh5, trace2group, iterh5, set_index
 import obspyh5
 
 
@@ -44,7 +44,7 @@ class HDF5TestCase(unittest.TestCase):
         self.assertEqual(stream, stream2)
 
     def test_hdf5_plugin_and_xcorr_index(self):
-        obspyh5.set_index('xcorr')
+        set_index('xcorr')
         stream = self.stream.copy()
         for i, tr in enumerate(stream):  # manipulate stats object
             station1, station2 = 'ST1', 'ST%d' % i
@@ -63,7 +63,7 @@ class HDF5TestCase(unittest.TestCase):
             stream2 = read(fname).sort()
         for tr in stream2:
             del tr.stats._format
-        obspyh5.set_index()
+        set_index()
         self.assertEqual(stream, stream2)
 
     def test_hdf5_basic(self):
@@ -155,6 +155,17 @@ class HDF5TestCase(unittest.TestCase):
             for tr in stream2:
                 del tr.stats._format
             self.assertEqual(stream, stream2)
+
+    def test_stored_index(self):
+       stream = self.stream
+       with NamedTemporaryFile(suffix='.h5') as ft:
+            fname = ft.name
+            stream.write(fname, 'H5')
+            set_index('nonesens')
+            stream.write(fname, 'H5', mode='a', override='ignore')
+       set_index()
+
+
 
 
 def suite():
