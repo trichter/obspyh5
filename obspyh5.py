@@ -1,12 +1,12 @@
 """
 obspyh5
 =======
-hdf5 write/read support for obspy
+HDF5 write/read support for obspy
 ---------------------------------
 
 Welcome!
 
-Saves and writes ObsPy streams to hdf5 files.
+Writes and reads ObsPy streams to/from HDF5 files.
 Stats attributes are preserved if they are numbers, strings,
 UTCDateTime objects or numpy arrays.
 Its best used as a plugin to obspy.
@@ -85,7 +85,7 @@ def set_index(index='standard'):
 
 def is_obspyh5(fname):
     """
-    Check if file is a hdf5 file and if it was written by obspyh5.
+    Check if file is a HDF5 file and if it was written by obspyh5.
     """
     try:
         if not h5py.is_hdf5(fname):
@@ -98,7 +98,7 @@ def is_obspyh5(fname):
 
 def iterh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None):
     """
-    Iterate over traces in hdf5 file. See readh5 for doc of kwargs.
+    Iterate over traces in HDF5 file. See readh5 for doc of kwargs.
     """
     def visit(group):
         """Visit all items iteratively and yield datasets as traces."""
@@ -129,7 +129,7 @@ def iterh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None):
 def readh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None,
            **kwargs):
     """
-    Read hdf5 file and return Stream object.
+    Read HDF5 file and return Stream object.
 
     :param fname: name of file to read
     :param mode: 'r' (read-only, default), 'a' (append) or other.
@@ -137,17 +137,14 @@ def readh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None,
         same file, while it is open for reading.
     :param group: group or subgroup to read, defaults to '/waveforms'
         This can alos point to a dataset. group can be used to read only a
-        part of the hdf5 file.
+        part of the HDF5 file.
     :param headonly: read only the headers of the traces
-    :param readonly: read only traces determined by given dict.
-        E.g. readonly={'network':'CX', 'station':'PB01'} will return traces
-        from CX.PB01. This will only work if the index is the same as it was
-        for wrting the stream. Additionally the index has to be
-        filled from the beginning to represent a hdf5 group.
-        E.g. with the standard index a dict with the following keys will work:
-        ('network', 'station'),
-        ('network', 'station', 'location', 'channel') or
-        ('network', 'station', 'location', 'channel', 'starttime', 'endtime').
+    :param readonly: read only traces restricted by given dict.
+        The index will be filled from left to right with the corresponding
+        values and a stream consisiting of all traces in the most-nested but
+        still fully specified group will be returned.
+        E.g. with the standard index the dict
+        {'network': 'NET', 'station': 'STA'} will return all traces in NET.STA/
     :param **kwargs: other kwargs are ignored!
     """
     traces = []
@@ -158,12 +155,12 @@ def readh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None,
 
 
 def writeh5(stream, fname, mode='w', group='/waveforms', headonly=False,
-            **kwargs):
+            override='warn', ignore=(), **kwargs):
     """
-    Write stream to hdf5 file.
+    Write stream to HDF5 file.
 
     :param stream: Stream to write.
-    :param fname: hdf5 filename
+    :param fname: filename
     :param mode: 'w' (write, default), 'a' (append) or other.
         Argument is passed to h5py.File. Use 'a' to write into an existing
         file. 'w' will create a new empty file in any case.
@@ -190,7 +187,8 @@ def writeh5(stream, fname, mode='w', group='/waveforms', headonly=False,
             f.attrs['index'] = _INDEX
         group = f.require_group(group)
         for tr in stream:
-            trace2group(tr, group, headonly=headonly, **kwargs)
+            trace2group(tr, group, headonly=headonly, override=override,
+                        ignore=ignore, **kwargs)
 
 
 def trace2group(trace, group, headonly=False, override='warn', ignore=(),
