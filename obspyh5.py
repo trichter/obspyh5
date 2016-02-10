@@ -176,6 +176,12 @@ def writeh5(stream, fname, mode='w', group='/waveforms', headonly=False,
         'endtime', 'sampling_rate', 'npts' and '_format' are ignored.
         'npts' is written for headonly=True.
     :param **kwargs: Additional kwargs are passed to create_dataset in h5py.
+        :param dtype: Data will be converted to this datatype
+        :param compression: Compression filter (e.g. 'gzip', 'lzf')
+        :param scaleoffset: Precission filter (integer number,
+            for integer data: number of bits, for float data: number of digits
+            after the decimal point)
+        For other kwargs consult the documentation of h5py.
     """
     if headonly and format == 'w':
         raise ValueError("headonly=True is only supported for format='a'")
