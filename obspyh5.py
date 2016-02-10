@@ -219,8 +219,8 @@ def trace2group(trace, group, headonly=False, override='warn', ignore=(),
                    "writing headers of existing data.")
             raise KeyError(msg % index)
     else:
-        dataset = group.create_dataset(index, trace.data.shape,
-                                       trace.data.dtype, **kwargs)
+        kwargs.setdefault('dtype', trace.data.dtype)
+        dataset = group.create_dataset(index, trace.data.shape, **kwargs)
         dataset[:] = trace.data
     ignore = tuple(ignore) + _IGNORE
     for key, val in trace.stats.items():
