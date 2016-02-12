@@ -106,4 +106,8 @@ Note
 ^^^^
 See also ASDF_ for a more comprehensive approach.
 
+Use case: Cross-correlation of late Okhotsk coda (notebook_).
+
 .. _ASDF: https://github.com/krischer/ASDF
+
+.. _notebook: http://nbviewer.jupyter.org/github/trichter/notebooks/blob/master/notebooks/okhotsk_coda_xcorr.ipynb
