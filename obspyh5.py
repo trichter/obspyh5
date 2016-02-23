@@ -77,7 +77,7 @@ def set_index(index='standard'):
     :param index: 'standard' (default), 'xcorr' or other string.
     """
     global _INDEX
-    if index in _INDEXES.keys():
+    if index in _INDEXES:
         _INDEX = _INDEXES[index]
     else:
         _INDEX = index
