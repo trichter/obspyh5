@@ -157,15 +157,13 @@ class HDF5TestCase(unittest.TestCase):
             self.assertEqual(stream, stream2)
 
     def test_stored_index(self):
-       stream = self.stream
-       with NamedTemporaryFile(suffix='.h5') as ft:
+        stream = self.stream
+        with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
             stream.write(fname, 'H5')
             set_index('nonesens')
             stream.write(fname, 'H5', mode='a', override='ignore')
-       set_index()
-
-
+        set_index()
 
 
 def suite():
