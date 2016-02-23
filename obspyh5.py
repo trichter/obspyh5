@@ -24,19 +24,19 @@ from future.builtins import (  # analysis:ignore
     bytes, dict, int, list, object, range, str,
     ascii, chr, hex, input, next, oct, open,
     pow, round, super, map, zip)
+
+from os.path import splitext
 import sys
-IS_PY3 = sys.version_info.major == 3
+from warnings import warn
 
 from numpy import string_
-from os.path import splitext
-from warnings import warn
 from obspy.core import Trace, Stream, UTCDateTime as UTC
-
-
 try:
     import h5py
 except ImportError:
     pass
+
+IS_PY3 = sys.version_info.major == 3
 
 _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
 
