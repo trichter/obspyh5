@@ -22,6 +22,9 @@ class HDF5TestCase(unittest.TestCase):
 
     def setUp(self):
         self.stream = read().sort()
+        # add processing info
+        self.stream.decimate(2)
+        self.stream.differentiate()
         self.stream[0].stats.onset = UTC()
         self.stream[0].stats.header = 42
         self.stream[0].stats.header2 = 'Test entry'

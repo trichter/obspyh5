@@ -25,6 +25,7 @@ from future.builtins import (  # analysis:ignore
     ascii, chr, hex, input, next, oct, open,
     pow, round, super, map, zip)
 
+import json
 from os.path import splitext
 import sys
 from warnings import warn
@@ -39,6 +40,7 @@ except ImportError:
 IS_PY3 = sys.version_info.major == 3
 
 _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
+_CONVERT_TO_JSON = ['processing']
 
 _INDEXES = {
     'standard': ('{network}.{station}/{location}.{channel}/'
@@ -233,6 +235,8 @@ def trace2group(trace, group, headonly=False, override='warn', ignore=(),
         if key not in ignore:
             if isinstance(val, str) or _is_utc(val):
                 dataset.attrs[key] = string_(val)
+            elif key in _CONVERT_TO_JSON:
+                dataset.attrs[key] = json.dumps(val)
             else:
                 try:
                     dataset.attrs[key] = val
@@ -250,6 +254,8 @@ def dataset2trace(dataset, headonly=False):
             stats[key] = val = val.decode('utf-8')
         if _is_utc(val):
             stats[key] = UTC(val)
+        if key in _CONVERT_TO_JSON:
+            stats[key] = json.loads(stats[key])
     if headonly:
         stats['npts'] = len(dataset)
         trace = Trace(header=stats)

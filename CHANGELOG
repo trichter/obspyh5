@@ -1,3 +1,5 @@
+v0.2.3:
+   * support writing of processing header
 v0.2.2:
    * add index attribute to HDF5 files to store the used index
    * add headonly argument to writeh5 to support writing of the stats
