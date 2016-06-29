@@ -37,6 +37,8 @@ try:
 except ImportError:
     pass
 
+__version__ = '0.2.3'
+
 IS_PY3 = sys.version_info.major == 3
 
 _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
@@ -191,6 +193,7 @@ def writeh5(stream, fname, mode='w', group='/waveforms', headonly=False,
         fname = fname + '.h5'
     with h5py.File(fname, mode, libver='latest') as f:
         f.attrs['file_format'] = 'obspyh5'
+        f.attrs['version'] = __version__
         if 'index' not in f.attrs:
             f.attrs['index'] = _INDEX
         group = f.require_group(group)
