@@ -16,12 +16,13 @@ before_install:
   - conda update -q conda
   - conda info -a
   - conda config --add channels obspy  
-  - conda install python=$TRAVIS_PYTHON_VERSION numpy nose obspy cython h5py
+  - conda install python=$TRAVIS_PYTHON_VERSION numpy nose obspy cython h5py coverage
 install:
   - pip install --no-deps .
 script:
   - mkdir empty; cd empty
-  - python ../test_obspyh5.py
+  - coverage run ../test_obspyh5.py
 after_success:
+  - bash <(curl -s https://codecov.io/bash)
 notifications:
     email: false
