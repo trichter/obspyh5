@@ -17,10 +17,8 @@ version = find_version('obspyh5.py')
 
 with open('README.rst') as f:
     README = f.read()
-if 'dev' not in version:  # get image for correct version from travis-ci
-    README = README.replace('branch=master', 'branch=v%s' % version)
 DESCRIPTION = README.split('\n')[2]
-LONG_DESCRIPTION = '\n'.join(README.split('\n')[5:])
+LONG_DESCRIPTION = '\n'.join(README.split('\n')[20:])
 
 ENTRY_POINTS = {
     'obspy.plugin.waveform': ['H5 = obspyh5'],
@@ -28,6 +26,19 @@ ENTRY_POINTS = {
         'isFormat = obspyh5:is_obspyh5',
         'readFormat = obspyh5:readh5',
         'writeFormat = obspyh5:writeh5']}
+
+CLASSIFIERS = [
+    'Environment :: Console',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: 3.5',
+    'Topic :: Scientific/Engineering :: Physics'
+    ]
 
 setup(name='obspyh5',
       version=version,
@@ -41,5 +52,6 @@ setup(name='obspyh5',
       install_requires=['future', 'h5py', 'numpy', 'obspy', 'setuptools'],
       entry_points=ENTRY_POINTS,
       zip_safe=False,
-      include_package_data=True
+      include_package_data=True,
+      classifiers=CLASSIFIERS
       )

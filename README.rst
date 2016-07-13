@@ -1,13 +1,22 @@
 obspyh5
 =======
-hdf5 write/read support for obspy
+HDF5 write/read support for obspy
 ---------------------------------
 
-|buildstatus|
+|buildstatus| |coverage| |version| |pyversions|
 
-.. |buildstatus| image:: https://api.travis-ci.org/trichter/obspyh5.png?
+.. |buildstatus| image:: https://api.travis-ci.org/trichter/obspyh5.svg?
     branch=master
    :target: https://travis-ci.org/trichter/obspyh5
+
+.. |coverage| image:: https://codecov.io/gh/trichter/obspyh5/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/trichter/obspyh5
+
+.. |version| image:: https://img.shields.io/pypi/v/obspyh5.svg
+   :target: https://pypi.python.org/pypi/obspyh5
+
+.. |pyversions| image:: https://img.shields.io/pypi/pyversions/obspyh5.svg
+   :target: https://python.org
 
 Saves and writes ObsPy streams to hdf5 files.
 Stats attributes are preserved if they are numbers, strings,
