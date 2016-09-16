@@ -22,7 +22,6 @@ from os.path import splitext
 import sys
 from warnings import warn
 
-from numpy import string_
 from obspy.core import Trace, Stream, UTCDateTime as UTC
 try:
     import h5py
@@ -228,9 +227,9 @@ def trace2group(trace, group, headonly=False, override='warn', ignore=(),
     ignore = tuple(ignore) + _IGNORE
     for key, val in trace.stats.items():
         if key not in ignore:
-            if isinstance(val, str) or _is_utc(val):
-                dataset.attrs[key] = string_(val)
-            elif key in _CONVERT_TO_JSON:
+            if _is_utc(val):
+                val = str(val)
+            if key in _CONVERT_TO_JSON:
                 dataset.attrs[key] = json.dumps(val)
             else:
                 try:
@@ -244,7 +243,7 @@ def dataset2trace(dataset, headonly=False):
     """Load trace from dataset."""
     stats = dict(dataset.attrs)
     for key, val in stats.items():
-        # next two lines are a quick and dirty hack for Python3
+        # decode bytes to utf-8 string for py3
         if _IS_PY3 and isinstance(val, bytes):
             stats[key] = val = val.decode('utf-8')
         if _is_utc(val):

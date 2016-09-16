@@ -20,6 +20,7 @@ class HDF5TestCase(unittest.TestCase):
         self.stream[0].stats.onset = UTC()
         self.stream[0].stats.header = 42
         self.stream[0].stats.header2 = 'Test entry'
+        self.stream[0].stats.header3 = u'Test entry unicode'
         for tr in self.stream:
             if 'response' in tr.stats:
                 del tr.stats.response
@@ -43,7 +44,7 @@ class HDF5TestCase(unittest.TestCase):
         stream = self.stream.copy()
         for i, tr in enumerate(stream):  # manipulate stats object
             station1, station2 = 'ST1', 'ST%d' % i
-            channel1, channel2 = 'HHZ', 'HHN'
+            channel1, channel2 = 'HHZ', u'HHN'
             s = tr.stats
             # we manipulate seed id so that important information gets
             # printed by obspy
@@ -127,7 +128,7 @@ class HDF5TestCase(unittest.TestCase):
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
             stream.write(fname, 'H5')
-            ro = {'network': 'BW', 'station': 'RJOB', 'location': '',
+            ro = {'network': 'BW', 'station': u'RJOB', 'location': '',
                   'channel': 'EHE'}
             stream2 = read(fname, 'H5', readonly=ro)
             self.assertEqual(stream[0].id, stream2[0].id)
