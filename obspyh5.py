@@ -17,14 +17,6 @@ For some examples have a look at the README.rst_.
 
 """
 
-# The following lines are for Py2/Py3 support with the future module.
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from future.builtins import (  # analysis:ignore
-    bytes, dict, int, list, object, range, str,
-    ascii, chr, hex, input, next, oct, open,
-    pow, round, super, map, zip)
-
 import json
 from os.path import splitext
 import sys
@@ -39,7 +31,7 @@ except ImportError:
 
 __version__ = '0.2.4-dev'
 
-IS_PY3 = sys.version_info.major == 3
+_IS_PY3 = sys.version_info.major == 3
 
 _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
 _CONVERT_TO_JSON = ['processing']
@@ -253,7 +245,7 @@ def dataset2trace(dataset, headonly=False):
     stats = dict(dataset.attrs)
     for key, val in stats.items():
         # next two lines are a quick and dirty hack for Python3
-        if IS_PY3 and isinstance(val, bytes):
+        if _IS_PY3 and isinstance(val, bytes):
             stats[key] = val = val.decode('utf-8')
         if _is_utc(val):
             stats[key] = UTC(val)
