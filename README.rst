@@ -42,13 +42,13 @@ Basic example using the obspy plugin::
 
     >>> from obspy import read
     >>> stream = read()  # load example stream
-    >>> print stream
+    >>> print(stream)
     ..3 Trace(s) in Stream:
     BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     >>> stream.write('test.h5', 'H5')  # declare 'H5' as format
-    >>> print read('test.h5')  # Order is not preserved!
+    >>> print(read('test.h5'))  # Order is not preserved!
     3 Trace(s) in Stream:
     BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
@@ -69,19 +69,19 @@ obspyh5 supports alternative indexing. ::
 
     >>> from obspy import read
     >>> import obspyh5
-    >>> print obspyh5._INDEX  # default index
-    {network}.{station}/{location}.{channel}/{starttime.datetime:%Y-%m-%dT%H:%M:%S}_{endtime.datetime:%Y-%m-%dT%H:%M:%S}
+    >>> print(obspyh5._INDEX)  # default index
+    waveforms/{network}.{station}/{location}.{channel}/{starttime.datetime:%Y-%m-%dT%H:%M:%S}_{endtime.datetime:%Y-%m-%dT%H:%M:%S}
 
 The index gets populated by the stats object when writing a trace, e.g. ::
 
     >>> stats = read()[0].stats
-    >>> print obspyh5._INDEX.format(**stats)
-    'BW.RJOB/.EHZ/2009-08-24T00:20:03_2009-08-24T00:20:32'
+    >>> print(obspyh5._INDEX.format(**stats))
+    'waveforms/BW.RJOB/.EHZ/2009-08-24T00:20:03_2009-08-24T00:20:32'
 
 To change the index use set_index. ::
 
     >>> obspyh5.set_index('xcorr')  # xcorr indexing
-    >>> obspyh5.set_index('{newtork}.{station}/{distance}')  # custom indexing
+    >>> obspyh5.set_index('waveforms/{network}.{station}/{distance}')  # custom indexing
 
 When using the 'xcorr' indexing stats needs the entries 'network1', 'station1',
 'location1', 'channel1', 'network2', 'station2', 'location2' and 'channel2'
@@ -101,12 +101,12 @@ of the first and second station. An example: ::
             s.location, s.channel = s.station2, s.channel2 = station2, channel2
             s.network1 = s.network2 = 'BW'
             s.location1 = s.location2 = ''
-    >>> print stream
+    >>> print(stream)
     ST1.HHZ.ST0.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     ST1.HHZ.ST1.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     ST1.HHZ.ST2.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     >>> stream.write('test_xcorr.h5', 'H5')
-    >>> print read('test_xcorr.h5')
+    >>> print(read('test_xcorr.h5'))
     ST1.HHZ.ST0.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     ST1.HHZ.ST1.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     ST1.HHZ.ST2.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples

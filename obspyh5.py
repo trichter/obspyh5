@@ -29,7 +29,7 @@ try:
 except ImportError:
     pass
 
-__version__ = '0.2.4-dev'
+__version__ = '0.3.0'
 
 _IS_PY3 = sys.version_info.major == 3
 
@@ -60,12 +60,12 @@ def set_index(index='standard'):
     Some indexes are hold by the module variable _INDEXES ('standard' and
     'xcorr'). The index can also be set to a custom value, e.g.
 
-    >>> set_index('{network}.{station}/{otherstrangeheader}')
+    >>> set_index('waveforms/{network}.{station}/{otherstrangeheader}')
 
     This string gets evaluated by a call to its format method,
     with the stats of each trace as kwargs, e.g.
 
-    >>> '{network}.{station}/{otherstrangeheader}'.format(**stats)
+    >>> 'waveforms/{network}.{station}/{otherstrangeheader}'.format(**stats)
 
     This means, that headers used in the index must exist for a trace to write.
     The index is stored inside the HDF5 file.
