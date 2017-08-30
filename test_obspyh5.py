@@ -162,6 +162,26 @@ class HDF5TestCase(unittest.TestCase):
             stream.write(fname, 'H5', mode='a', override='ignore')
         set_index()
 
+    def test_read_files_saved_prior_version_0_3(self):
+        stream = self.stream
+        index_v_0_2 = ('{network}.{station}/{location}.{channel}/'
+                       '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_'
+                       '{endtime.datetime:%Y-%m-%dT%H:%M:%S}')
+        with NamedTemporaryFile(suffix='.h5') as ft:
+            fname = ft.name
+            set_index(index_v_0_2)
+            stream.write(fname, 'H5', group='waveforms')
+            stream2 = read(fname, 'H5', group='waveforms')
+            stream3 = read(fname, 'H5')
+        for tr in stream2:
+            del tr.stats._format
+        for tr in stream3:
+            del tr.stats._format
+        self.assertEqual(stream, stream2)
+        self.assertEqual(stream, stream3)
+        set_index()
+
+
 
 def suite():
     return unittest.makeSuite(HDF5TestCase, 'test')

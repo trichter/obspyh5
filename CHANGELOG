@@ -1,5 +1,7 @@
-dev:
+v0.3.0:
    * remove future dependency
+   * change order of optional arguments (e.g. move mode argument to the end for read function)
+   * change default for group from 'waveforms/' to '/' and therfor start the index with 'waveforms/'
 v0.2.3:
    * support writing of processing header
    * add version file attribute

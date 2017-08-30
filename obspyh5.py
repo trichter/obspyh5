@@ -37,10 +37,10 @@ _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
 _CONVERT_TO_JSON = ['processing']
 
 _INDEXES = {
-    'standard': ('{network}.{station}/{location}.{channel}/'
+    'standard': ('waveforms/{network}.{station}/{location}.{channel}/'
                  '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_'
                  '{endtime.datetime:%Y-%m-%dT%H:%M:%S}'),
-    'xcorr': ('{network1}.{station1}-{network2}.{station2}/'
+    'xcorr': ('waveforms/{network1}.{station1}-{network2}.{station2}/'
               '{location1}.{channel1}-{location2}.{channel2}/'
               '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_'
               '{endtime.datetime:%Y-%m-%dT%H:%M:%S}')}
@@ -92,7 +92,7 @@ def is_obspyh5(fname):
         return False
 
 
-def iterh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None):
+def iterh5(fname, group='/', readonly=None, headonly=False, mode='r'):
     """
     Iterate over traces in HDF5 file. See readh5 for doc of kwargs.
     """
@@ -122,36 +122,36 @@ def iterh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None):
             yield v
 
 
-def readh5(fname, mode='r', group='/waveforms', headonly=False, readonly=None,
+def readh5(fname, group='/', headonly=False, readonly=None, mode='r',
            **kwargs):
     """
     Read HDF5 file and return Stream object.
 
     :param fname: name of file to read
-    :param mode: 'r' (read-only, default), 'a' (append) or other.
-        Argument is passed to h5py.File. Use 'a' if you want to write in the
-        same file, while it is open for reading.
-    :param group: group or subgroup to read, defaults to '/waveforms'
+    :param group: group or subgroup to read, defaults to '/'
         This can alos point to a dataset. group can be used to read only a
         part of the HDF5 file.
-    :param headonly: read only the headers of the traces
     :param readonly: read only traces restricted by given dict.
         The index will be filled from left to right with the corresponding
         values and a stream consisiting of all traces in the most-nested but
         still fully specified group will be returned.
         E.g. with the standard index the dict
         {'network': 'NET', 'station': 'STA'} will return all traces in NET.STA/
+    :param headonly: read only the headers of the traces
+    :param mode: 'r' (read-only, default), 'a' (append) or other.
+        Argument is passed to h5py.File. Use 'a' if you want to write in the
+        same file, while it is open for reading.
     :param **kwargs: other kwargs are ignored!
     """
     traces = []
-    for tr in iterh5(fname, mode=mode, group=group, headonly=headonly,
-                     readonly=readonly):
+    for tr in iterh5(fname, group=group, readonly=readonly, headonly=headonly,
+                     mode=mode):
         traces.append(tr)
     return Stream(traces=traces)
 
 
-def writeh5(stream, fname, mode='w', group='/waveforms', headonly=False,
-            override='warn', ignore=(), **kwargs):
+def writeh5(stream, fname, mode='w', headonly=False, override='warn',
+            ignore=(), group='/', **kwargs):
     """
     Write stream to HDF5 file.
 
@@ -160,7 +160,6 @@ def writeh5(stream, fname, mode='w', group='/waveforms', headonly=False,
     :param mode: 'w' (write, default), 'a' (append) or other.
         Argument is passed to h5py.File. Use 'a' to write into an existing
         file. 'w' will create a new empty file in any case.
-    :param group: defaults to '/waveforms', not recommended to change.
     :param headonly: write only the header of the traces
     :param override: 'warn' (default, warn and override), 'raise' (raise
         Exception), 'ignore' (override, without warning), 'dont' (do not
@@ -171,6 +170,7 @@ def writeh5(stream, fname, mode='w', group='/waveforms', headonly=False,
         Do not write headers listed inside ignore. Additionally the headers
         'endtime', 'sampling_rate', 'npts' and '_format' are ignored.
         'npts' is written for headonly=True.
+    :param group: defaults to '/', not recommended to change.
     :param **kwargs: Additional kwargs are passed to create_dataset in h5py.
         :param dtype: Data will be converted to this datatype
         :param compression: Compression filter (e.g. 'gzip', 'lzf')
