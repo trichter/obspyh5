@@ -29,7 +29,7 @@ try:
 except ImportError:
     pass
 
-__version__ = '0.3.1-dev'
+__version__ = '0.3.2'
 
 _IS_PY3 = sys.version_info.major == 3
 
@@ -147,7 +147,7 @@ def readh5(fname, group='/', headonly=False, readonly=None, mode='r',
     for tr in iterh5(fname, group=group, readonly=readonly, headonly=headonly,
                      mode=mode):
         traces.append(tr)
-    return Stream(traces=traces)
+    return Stream(traces=traces).sort()
 
 
 def writeh5(stream, fname, mode='w', headonly=False, override='warn',

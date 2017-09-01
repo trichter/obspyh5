@@ -1,3 +1,5 @@
+v0.3.2:
+   * Stream returned by readh5 is now sorted
 v0.3.0:
    * remove future dependency
    * change order of optional arguments (e.g. move mode argument to the end for read function)
