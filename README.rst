@@ -119,4 +119,4 @@ Use case: Cross-correlation of late Okhotsk coda (notebook_).
 
 .. _ASDF: https://seismic-data.org/
 
-.. _notebook: http://nbviewer.jupyter.org/github/trichter/notebooks/blob/master/notebooks/okhotsk_coda_xcorr.ipynb
+.. _notebook: http://nbviewer.jupyter.org/github/trichter/notebooks/blob/master/cross_correlation_okhotsk_coda.ipynb
