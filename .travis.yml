@@ -31,7 +31,7 @@ before_install:
   - conda config --set always_yes yes
   - conda update -q conda
   - conda info -a
-  - conda config --add channels obspy
+  - conda config --add channels conda-forge
   - conda create -q -n testenv python=$PYTHON_VERSION numpy nose obspy cython h5py coverage
   - source activate testenv
   - conda list
