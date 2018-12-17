@@ -36,6 +36,13 @@ running::
 
     python setup.py install
 
+With conda you can install into a freesh environment with::
+
+    conda config --add channels conda-forge
+    conda create -n obsh5 numpy obspy h5py
+    conda activate obsh5
+    conda install obspyh5
+
 Usage
 ^^^^^
 Basic example using the obspy plugin::
