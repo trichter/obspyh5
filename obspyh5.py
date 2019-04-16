@@ -88,7 +88,7 @@ def is_obspyh5(fname):
             return False
         with h5py.File(fname, 'r') as f:
             return f.attrs['file_format'].lower() == 'obspyh5'
-    except:
+    except Exception:
         return False
 
 
