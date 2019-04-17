@@ -29,7 +29,7 @@ try:
 except ImportError:
     pass
 
-__version__ = '0.3.3-dev'
+__version__ = '0.4.0'
 
 _IS_PY3 = sys.version_info.major == 3
 
