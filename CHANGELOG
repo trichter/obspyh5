@@ -1,3 +1,5 @@
+v0.4.1:
+   * allow to set libver when creating a new file (default is now 'earliest' for best backwards compatibility)
 v0.4.0:
    * add official support for python 3.7 and 3.8
 v0.3.2:

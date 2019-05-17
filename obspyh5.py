@@ -151,7 +151,7 @@ def readh5(fname, group='/', headonly=False, readonly=None, mode='r',
 
 
 def writeh5(stream, fname, mode='w', headonly=False, override='warn',
-            ignore=(), group='/', **kwargs):
+            ignore=(), group='/', libver='earliest', **kwargs):
     """
     Write stream to HDF5 file.
 
@@ -171,6 +171,9 @@ def writeh5(stream, fname, mode='w', headonly=False, override='warn',
         'endtime', 'sampling_rate', 'npts' and '_format' are ignored.
         'npts' is written for headonly=True.
     :param group: defaults to '/', not recommended to change.
+    :param libver: hdf5 version bounding for new files,
+        `'latest'` for best performance,
+        `'earliest'` for best backwards compatibility (default)
     :param **kwargs: Additional kwargs are passed to create_dataset in h5py.
         :param dtype: Data will be converted to this datatype
         :param compression: Compression filter (e.g. 'gzip', 'lzf')
@@ -183,7 +186,7 @@ def writeh5(stream, fname, mode='w', headonly=False, override='warn',
         raise ValueError("headonly=True is only supported for format='a'")
     if not splitext(fname)[1]:
         fname = fname + '.h5'
-    with h5py.File(fname, mode, libver='latest') as f:
+    with h5py.File(fname, mode, libver=libver) as f:
         f.attrs['file_format'] = 'obspyh5'
         f.attrs['version'] = __version__
         if 'index' not in f.attrs:
