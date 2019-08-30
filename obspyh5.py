@@ -17,7 +17,6 @@ For some examples have a look at the README.rst_.
 .. _README.rst: https://github.com/trichter/obspyh5
 
 """
-
 import json
 from os.path import splitext
 import sys

@@ -31,17 +31,12 @@ Install h5py and obspy. After that install obspyh5 using pip by::
 
     pip install obspyh5
 
-Alternatively you can install obspyh5 by downloading the source code and
-running::
-
-    python setup.py install
-
-With conda you can install into a freesh environment with::
+With conda the package can be installed into a fresh environment with::
 
     conda config --add channels conda-forge
     conda create -n obsh5 numpy obspy h5py
     conda activate obsh5
-    conda install obspyh5
+    pip install obspyh5
 
 Usage
 ^^^^^
