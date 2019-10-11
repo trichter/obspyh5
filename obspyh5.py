@@ -23,6 +23,7 @@ import sys
 from warnings import warn
 
 from obspy.core import Trace, Stream, UTCDateTime as UTC
+from obspy.core.util import AttribDict
 try:
     import h5py
 except ImportError:
@@ -34,6 +35,7 @@ _IS_PY3 = sys.version_info.major == 3
 
 _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
 _CONVERT_TO_JSON = ['processing']
+_CONVERT_ATTRIBDICT_TO_JSON = ['stack']
 
 _INDEXES = {
     'standard': ('waveforms/{network}.{station}/{location}.{channel}/'
@@ -234,6 +236,8 @@ def trace2group(trace, group, headonly=False, override='warn', ignore=(),
                 val = str(val)
             if key in _CONVERT_TO_JSON:
                 dataset.attrs[key] = json.dumps(val)
+            elif key in _CONVERT_ATTRIBDICT_TO_JSON:
+                dataset.attrs[key] = json.dumps(dict(val))
             else:
                 try:
                     dataset.attrs[key] = val
@@ -253,6 +257,10 @@ def dataset2trace(dataset, headonly=False):
             stats[key] = UTC(val)
         if key in _CONVERT_TO_JSON:
             stats[key] = json.loads(stats[key])
+        elif key in _CONVERT_ATTRIBDICT_TO_JSON:
+            stats[key] = AttribDict(json.loads(stats[key]))
+            if key == 'stack' and isinstance(stats[key].get('type'), list):
+                stats[key].type = tuple(stats[key].type)
     if headonly:
         stats['npts'] = len(dataset)
         trace = Trace(header=stats)

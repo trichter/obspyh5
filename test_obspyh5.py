@@ -6,7 +6,7 @@ import h5py
 import numpy as np
 from obspy import read
 from obspy.core import UTCDateTime as UTC
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import AttribDict, NamedTemporaryFile
 from obspyh5 import readh5, writeh5, trace2group, iterh5, set_index
 import obspyh5
 
@@ -22,6 +22,8 @@ class HDF5TestCase(unittest.TestCase):
         self.stream[0].stats.header = 42
         self.stream[0].stats.header2 = 'Test entry'
         self.stream[0].stats.header3 = u'Test entry unicode'
+        stack = dict(group='all', count=5, type=('pw', 2))
+        self.stream[0].stats.stack = AttribDict(stack)
         for tr in self.stream:
             if 'response' in tr.stats:
                 del tr.stats.response
@@ -180,7 +182,6 @@ class HDF5TestCase(unittest.TestCase):
         self.assertEqual(stream, stream2)
         self.assertEqual(stream, stream3)
         set_index()
-
 
 
 def suite():

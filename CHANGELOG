@@ -1,5 +1,6 @@
 dev:
    * remove support for python versions < 3.5
+   * support writing of stack header
 v0.4.1:
    * allow to set libver when creating a new file (default is now 'earliest' for best backwards compatibility)
 v0.4.0:
