@@ -19,7 +19,6 @@ For some examples have a look at the README.rst_.
 """
 import json
 from os.path import splitext
-import sys
 from warnings import warn
 
 from obspy.core import Trace, Stream, UTCDateTime as UTC
@@ -30,8 +29,6 @@ except ImportError:
     pass
 
 __version__ = '0.4.2-dev'
-
-_IS_PY3 = sys.version_info.major == 3
 
 _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
 _CONVERT_TO_JSON = ['processing']
@@ -251,7 +248,7 @@ def dataset2trace(dataset, headonly=False):
     stats = dict(dataset.attrs)
     for key, val in stats.items():
         # decode bytes to utf-8 string for py3
-        if _IS_PY3 and isinstance(val, bytes):
+        if isinstance(val, bytes):
             stats[key] = val = val.decode('utf-8')
         if key in _CONVERT_TO_JSON or key in _CONVERT_ATTRIBDICT_TO_JSON:
             if isinstance(val, str):
