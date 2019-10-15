@@ -253,14 +253,17 @@ def dataset2trace(dataset, headonly=False):
         # decode bytes to utf-8 string for py3
         if _IS_PY3 and isinstance(val, bytes):
             stats[key] = val = val.decode('utf-8')
-        if _is_utc(val):
+        if key in _CONVERT_TO_JSON or key in _CONVERT_ATTRIBDICT_TO_JSON:
+            if isinstance(val, str):
+                val = json.loads(val)
+                if (isinstance(val, dict) and
+                        key in _CONVERT_ATTRIBDICT_TO_JSON):
+                    val = AttribDict(val)
+                    if key == 'stack' and isinstance(val.get('type'), list):
+                        val.type = tuple(val.type)
+                stats[key] = val
+        elif _is_utc(val):
             stats[key] = UTC(val)
-        if key in _CONVERT_TO_JSON:
-            stats[key] = json.loads(stats[key])
-        elif key in _CONVERT_ATTRIBDICT_TO_JSON:
-            stats[key] = AttribDict(json.loads(stats[key]))
-            if key == 'stack' and isinstance(stats[key].get('type'), list):
-                stats[key].type = tuple(stats[key].type)
     if headonly:
         stats['npts'] = len(dataset)
         trace = Trace(header=stats)
