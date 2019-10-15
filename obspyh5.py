@@ -251,8 +251,11 @@ def dataset2trace(dataset, headonly=False):
         if isinstance(val, bytes):
             stats[key] = val = val.decode('utf-8')
         if key in _CONVERT_TO_JSON or key in _CONVERT_ATTRIBDICT_TO_JSON:
-            if isinstance(val, str):
+            try:
                 val = json.loads(val)
+            except json.JSONDecodeError:
+                pass
+            else:
                 if (isinstance(val, dict) and
                         key in _CONVERT_ATTRIBDICT_TO_JSON):
                     val = AttribDict(val)
