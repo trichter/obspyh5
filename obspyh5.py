@@ -149,7 +149,8 @@ def readh5(fname, group='/', headonly=False, readonly=None, mode='r',
 
 
 def writeh5(stream, fname, mode='w', headonly=False, override='warn',
-            ignore=(), group='/', libver='earliest', **kwargs):
+            ignore=(), group='/', libver='earliest', offset_trc_num=0,
+            **kwargs):
     """
     Write stream to HDF5 file.
 
@@ -172,6 +173,7 @@ def writeh5(stream, fname, mode='w', headonly=False, override='warn',
     :param libver: hdf5 version bounding for new files,
         `'latest'` for best performance,
         `'earliest'` for best backwards compatibility (default)
+    :param offset_trc_num: will be added to the trace number
     :param **kwargs: Additional kwargs are passed to create_dataset in h5py.
         :param dtype: Data will be converted to this datatype
         :param compression: Compression filter (e.g. 'gzip', 'lzf')
@@ -190,13 +192,14 @@ def writeh5(stream, fname, mode='w', headonly=False, override='warn',
         if 'index' not in f.attrs:
             f.attrs['index'] = _INDEX
         group = f.require_group(group)
-        for tr in stream:
+        for trc_num, tr in enumerate(stream):
             trace2group(tr, group, headonly=headonly, override=override,
-                        ignore=ignore, **kwargs)
+                        ignore=ignore, trc_num=trc_num+offset_trc_num,
+                        **kwargs)
 
 
 def trace2group(trace, group, headonly=False, override='warn', ignore=(),
-                **kwargs):
+                trc_num=0, **kwargs):
     """Write trace into group."""
     if override not in ('warn', 'raise', 'ignore', 'dont'):
         msg = "Override has to be one of ('warn', 'raise', 'ignore', 'dont')."
@@ -205,7 +208,7 @@ def trace2group(trace, group, headonly=False, override='warn', ignore=(),
         index = group.file.attrs['index']
     except KeyError:
         index = group.file.attrs['index'] = _INDEX
-    index = index.format(**trace.stats)
+    index = index.format(trc_num=trc_num, **trace.stats)
     if index in group and not headonly:
         msg = "Index '%s' already exists." % index
         if override == 'warn':

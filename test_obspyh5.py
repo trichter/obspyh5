@@ -84,7 +84,7 @@ class HDF5TestCase(unittest.TestCase):
             # test if group was really created
             with h5py.File(fname) as f:
                 self.assertTrue('waveforms' in f)
-#            # test numpy headers
+#           # test numpy headers
             stream[0].stats.num = np.array([[5, 4, 3], [1, 2, 3.]])
             writeh5(stream, fname)
             stream2 = readh5(fname)
@@ -181,6 +181,21 @@ class HDF5TestCase(unittest.TestCase):
             del tr.stats._format
         self.assertEqual(stream, stream2)
         self.assertEqual(stream, stream3)
+        set_index()
+
+    def test_trc_num(self):
+        stream = self.stream.copy()
+        with NamedTemporaryFile(suffix='.h5') as ft:
+            fname = ft.name
+            set_index('waveforms/{trc_num:03d}')
+            stream.write(fname, 'H5')
+            stream.write(fname, 'H5', mode='a', offset_trc_num=3)
+            stream2 = read(fname, 'H5')
+        for tr in stream2:
+            del tr.stats._format
+        self.assertEqual(len(stream2), 6)
+        self.assertEqual(stream2[::2], stream)
+        self.assertEqual(stream2[1::2], stream)
         set_index()
 
 

@@ -74,16 +74,17 @@ obspyh5 supports alternative indexing. ::
     >>> print(obspyh5._INDEX)  # default index
     waveforms/{network}.{station}/{location}.{channel}/{starttime.datetime:%Y-%m-%dT%H:%M:%S}_{endtime.datetime:%Y-%m-%dT%H:%M:%S}
 
-The index gets populated by the stats object when writing a trace, e.g. ::
+The index gets populated by the stats object and the trace number when writing a trace, e.g. ::
 
     >>> stats = read()[0].stats
-    >>> print(obspyh5._INDEX.format(**stats))
+    >>> print(obspyh5._INDEX.format(trc_num=0, **stats))
     'waveforms/BW.RJOB/.EHZ/2009-08-24T00:20:03_2009-08-24T00:20:32'
 
 To change the index use set_index. ::
 
     >>> obspyh5.set_index('xcorr')  # xcorr indexing
     >>> obspyh5.set_index('waveforms/{network}.{station}/{distance}')  # custom indexing
+    >>> obspyh5.set_index('waveforms/{trc_num:03d}_{station}')  # use of the trace number
 
 When using the 'xcorr' indexing stats needs the entries 'network1', 'station1',
 'location1', 'channel1', 'network2', 'station2', 'location2' and 'channel2'
@@ -112,6 +113,7 @@ of the first and second station. An example: ::
     ST1.HHZ.ST0.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     ST1.HHZ.ST1.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     ST1.HHZ.ST2.HHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+
 
 Note
 ^^^^
