@@ -1,9 +1,11 @@
 dev:
    * remove support for python versions < 3.5
-   * support writing of stack header
+   * support writing of more types for the header
+     (numbers, strings, np.ndarray, obspy.UTCDateTime, and obspy.AttribDict)
    * add support for '{trc_num}' in the index which inserts the number of the trace
 v0.4.1:
-   * allow to set libver when creating a new file (default is now 'earliest' for best backwards compatibility)
+   * allow to set libver when creating a new file
+     (default is now 'earliest' for best backwards compatibility)
 v0.4.0:
    * add official support for python 3.7 and 3.8
 v0.3.2:

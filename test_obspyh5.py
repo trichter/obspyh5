@@ -6,7 +6,7 @@ import h5py
 import numpy as np
 from obspy import read
 from obspy.core import UTCDateTime as UTC
-from obspy.core.util import AttribDict, NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile
 from obspyh5 import readh5, writeh5, trace2group, iterh5, set_index
 import obspyh5
 
@@ -22,8 +22,8 @@ class HDF5TestCase(unittest.TestCase):
         self.stream[0].stats.header = 42
         self.stream[0].stats.header2 = 'Test entry'
         self.stream[0].stats.header3 = u'Test entry unicode'
-        stack = dict(group='all', count=5, type=('pw', 2))
-        self.stream[0].stats.stack = AttribDict(stack)
+        stack = dict(group='all', count=5, type=['pw', 2])
+        self.stream[0].stats.stack = stack
         for tr in self.stream:
             if 'response' in tr.stats:
                 del tr.stats.response
@@ -94,7 +94,7 @@ class HDF5TestCase(unittest.TestCase):
                                           stream2[0].stats.num)
             del stream[0].stats.num
             # check for warning for unsupported types
-            stream[0].stats.toomuch = {1: 3}
+            stream[0].stats.toomuch = object()
             with warnings.catch_warnings(record=True) as w:
                 writeh5(stream, fname)
                 warnings.simplefilter("always")
@@ -169,34 +169,59 @@ class HDF5TestCase(unittest.TestCase):
         index_v_0_2 = ('{network}.{station}/{location}.{channel}/'
                        '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_'
                        '{endtime.datetime:%Y-%m-%dT%H:%M:%S}')
+        set_index(index_v_0_2)
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
-            set_index(index_v_0_2)
             stream.write(fname, 'H5', group='waveforms')
             stream2 = read(fname, 'H5', group='waveforms')
             stream3 = read(fname, 'H5')
+        set_index()
         for tr in stream2:
             del tr.stats._format
         for tr in stream3:
             del tr.stats._format
         self.assertEqual(stream, stream2)
         self.assertEqual(stream, stream3)
-        set_index()
 
     def test_trc_num(self):
         stream = self.stream.copy()
+        set_index('waveforms/{trc_num:03d}')
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
-            set_index('waveforms/{trc_num:03d}')
             stream.write(fname, 'H5')
             stream.write(fname, 'H5', mode='a', offset_trc_num=3)
             stream2 = read(fname, 'H5')
         for tr in stream2:
             del tr.stats._format
+        set_index()
         self.assertEqual(len(stream2), 6)
         self.assertEqual(stream2[::2], stream)
         self.assertEqual(stream2[1::2], stream)
-        set_index()
+
+    def test_attrib_dict(self):
+        stream = self.stream.copy()
+        stream[0].stats.ad = {'bla': 0, 'bla2': 'test', 'bla3': [4, 5]}
+        stream[0].stats.ad.nested = {'x': 'next', 'y': 'level'}
+        with NamedTemporaryFile(suffix='.h5') as ft:
+            fname = ft.name
+            stream.write(fname, 'H5')
+            stream2 = read(fname, 'H5')
+        for tr in stream2:
+            del tr.stats._format
+        self.assertEqual(stream2, stream)
+
+    def test_without_json(self):
+        stream = self.stream.copy()
+        for tr in stream:
+            del tr.stats.processing
+        with NamedTemporaryFile(suffix='.h5') as ft:
+            fname = ft.name
+            stream.write(fname, 'H5')
+            stream2 = read(fname, 'H5')
+        for tr in stream2:
+            del tr.stats._format
+        self.assertEqual(stream2, stream)
+
 
 
 def suite():

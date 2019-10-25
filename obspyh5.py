@@ -21,6 +21,7 @@ import json
 from os.path import splitext
 from warnings import warn
 
+import numpy as np
 from obspy.core import Trace, Stream, UTCDateTime as UTC
 from obspy.core.util import AttribDict
 try:
@@ -28,11 +29,9 @@ try:
 except ImportError:
     pass
 
-__version__ = '0.4.2-dev'
+__version__ = '0.5.0-dev'
 
 _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
-_CONVERT_TO_JSON = ['processing']
-_CONVERT_ATTRIBDICT_TO_JSON = ['stack']
 
 _INDEXES = {
     'standard': ('waveforms/{network}.{station}/{location}.{channel}/'
@@ -45,10 +44,23 @@ _INDEXES = {
 
 _INDEX = _INDEXES['standard']
 
+_NOT_SERIALIZABLE = '<not serializable>'
+
 
 def _is_utc(utc):
     utc = str(utc)
     return len(utc) == 27 and utc.endswith('Z')
+
+
+class _FlexibleEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, AttribDict):
+            return dict(obj)
+        elif isinstance(obj, np.ndarray) and len(np.shape(obj)) == 1:
+            return list(obj)
+        else:
+            warn('{!r:.80} is not serializable'.format(obj))
+        return _NOT_SERIALIZABLE
 
 
 def set_index(index='standard'):
@@ -181,6 +193,9 @@ def writeh5(stream, fname, mode='w', headonly=False, override='warn',
             for integer data: number of bits, for float data: number of digits
             after the decimal point)
         For other kwargs consult the documentation of h5py.
+
+    Most headers are supported, e.g. numbers, strings, UTCDateTime,
+    AttribDict, numpy arrays, lists, tuples (will be converted to lists).
     """
     if headonly and format == 'w':
         raise ValueError("headonly=True is only supported for format='a'")
@@ -230,43 +245,42 @@ def trace2group(trace, group, headonly=False, override='warn', ignore=(),
         dataset = group.create_dataset(index, trace.data.shape, **kwargs)
         dataset[:] = trace.data
     ignore = tuple(ignore) + _IGNORE
+    if '_format' in trace.stats and '_format' in _IGNORE:
+        # ignore format specific header by default, e.g. trace.stats.mseed
+        ignore = ignore + (trace.stats._format.lower(),)
+    jsondata = {}
     for key, val in trace.stats.items():
         if key not in ignore:
             if _is_utc(val):
                 val = str(val)
-            if key in _CONVERT_TO_JSON:
-                dataset.attrs[key] = json.dumps(val)
-            elif key in _CONVERT_ATTRIBDICT_TO_JSON:
-                dataset.attrs[key] = json.dumps(dict(val))
+            if isinstance(val, (tuple, list, AttribDict)):
+                jsondata[key] = val
             else:
                 try:
                     dataset.attrs[key] = val
                 except (KeyError, TypeError):
-                    warn(("Writing header '%s' is not supported. Only h5py "
-                          "types and UTCDateTime are supported.") % key)
+                    jsondata[key] = val
+    if len(jsondata) > 0:
+        dataset.attrs['_json'] = json.dumps(jsondata, cls=_FlexibleEncoder)
 
 
 def dataset2trace(dataset, headonly=False):
     """Load trace from dataset."""
-    stats = dict(dataset.attrs)
+    stats = AttribDict(dataset.attrs)
     for key, val in stats.items():
         # decode bytes to utf-8 string for py3
         if isinstance(val, bytes):
             stats[key] = val = val.decode('utf-8')
-        if key in _CONVERT_TO_JSON or key in _CONVERT_ATTRIBDICT_TO_JSON:
-            try:
-                val = json.loads(val)
-            except json.JSONDecodeError:
-                pass
-            else:
-                if (isinstance(val, dict) and
-                        key in _CONVERT_ATTRIBDICT_TO_JSON):
-                    val = AttribDict(val)
-                    if key == 'stack' and isinstance(val.get('type'), list):
-                        val.type = tuple(val.type)
-                stats[key] = val
-        elif _is_utc(val):
+        if _is_utc(val):
             stats[key] = UTC(val)
+        elif key == 'processing':
+            # this block is only necessary for files written with old obspyh5
+            # versions (< 0.5.0)
+            stats[key] = json.loads(val)
+    jsondata = stats.pop('_json', None)
+    if jsondata is not None:
+        for k, v in json.loads(jsondata).items():
+            stats[k] = v
     if headonly:
         stats['npts'] = len(dataset)
         trace = Trace(header=stats)
