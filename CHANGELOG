@@ -1,7 +1,8 @@
 dev:
    * remove support for python versions < 3.5
    * support writing of more types for the header
-     (numbers, strings, np.ndarray, obspy.UTCDateTime, and obspy.AttribDict)
+     (numbers, strings, np.ndarray, obspy.UTCDateTime, and obspy.AttribDict),
+     format specific headers are excluded by default.
    * add support for '{trc_num}' in the index which inserts the number of the trace
 v0.4.1:
    * allow to set libver when creating a new file
