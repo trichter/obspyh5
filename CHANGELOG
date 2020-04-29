@@ -1,4 +1,4 @@
-dev:
+v0.5.0:
    * remove support for python versions < 3.5
    * support writing of more types for the header
      (numbers, strings, np.ndarray, obspy.UTCDateTime, and obspy.AttribDict),
