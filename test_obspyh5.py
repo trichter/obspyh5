@@ -82,7 +82,7 @@ class HDF5TestCase(unittest.TestCase):
             self.assertEqual(stream2[0].stats, stream3[0].stats)
             self.assertEqual(len(stream3[0].data), 0)
             # test if group was really created
-            with h5py.File(fname) as f:
+            with h5py.File(fname, mode='r') as f:
                 self.assertTrue('waveforms' in f)
 #           # test numpy headers
             stream[0].stats.num = np.array([[5, 4, 3], [1, 2, 3.]])
@@ -104,7 +104,7 @@ class HDF5TestCase(unittest.TestCase):
     def test_hdf5_interface(self):
         stream = self.stream
         with NamedTemporaryFile(suffix='.h5') as ft:
-            with h5py.File(ft.name) as f:
+            with h5py.File(ft.name, mode='w') as f:
                 trace2group(stream[0], f)
                 # test override
                 with warnings.catch_warnings(record=True) as w:
