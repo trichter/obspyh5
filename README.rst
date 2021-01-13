@@ -5,9 +5,8 @@ HDF5 write/read support for obspy
 
 |buildstatus| |coverage| |version| |pyversions| |zenodo|
 
-.. |buildstatus| image:: https://api.travis-ci.org/trichter/obspyh5.svg?
-    branch=master
-   :target: https://travis-ci.org/trichter/obspyh5
+.. |buildstatus| image:: https://github.com/trichter/obspyh5/workflows/tests/badge.svg
+   :target: https://github.com/trichter/obspyh5/actions
 
 .. |coverage| image:: https://codecov.io/gh/trichter/obspyh5/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/trichter/obspyh5
