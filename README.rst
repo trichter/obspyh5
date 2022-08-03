@@ -53,11 +53,11 @@ Basic example using the obspy plugin::
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     >>> stream.write('test.h5', 'H5')  # declare 'H5' as format
-    >>> print(read('test.h5'))  # Order is not preserved!
+    >>> print(read('test.h5'))  # order is preserved only for default index
     3 Trace(s) in Stream:
     BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
-    BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+    BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
 
 Example iterating over traces in a huge hdf5 file. After each iteration the
 trace is not kept in memory and therefore it is possible to process a huge hdf5
@@ -75,19 +75,20 @@ obspyh5 supports alternative indexing. ::
     >>> from obspy import read
     >>> import obspyh5
     >>> print(obspyh5._INDEX)  # default index
-    waveforms/{network}.{station}/{location}.{channel}/{starttime.datetime:%Y-%m-%dT%H:%M:%S}_{endtime.datetime:%Y-%m-%dT%H:%M:%S}
+    waveforms/{trc_num:03d}_{id}_{starttime.datetime:%Y-%m-%dT%H:%M:%S}_{duration:.1f}s
 
 The index gets populated by the stats object and the trace number when writing a trace, e.g. ::
 
-    >>> stats = read()[0].stats
-    >>> print(obspyh5._INDEX.format(trc_num=0, **stats))
-    'waveforms/BW.RJOB/.EHZ/2009-08-24T00:20:03_2009-08-24T00:20:32'
+    'waveforms/000_BW.RJOB..EHZ/2009-08-24T00:20:03_30.0s'
 
 To change the index use set_index. ::
 
+    >>> obspyh5.set_index('flat')  # flat index wihtout trace number, writing a trace with the same metadata twice will overwrite
+    >>> obspyh5.set_index('nested')  # nested index
     >>> obspyh5.set_index('xcorr')  # xcorr indexing
     >>> obspyh5.set_index('waveforms/{network}.{station}/{distance}')  # custom indexing
     >>> obspyh5.set_index('waveforms/{trc_num:03d}_{station}')  # use of the trace number
+    >>> obspyh5.set_index()  # default index
 
 When using the 'xcorr' indexing stats needs the entries 'network1', 'station1',
 'location1', 'channel1', 'network2', 'station2', 'location2' and 'channel2'

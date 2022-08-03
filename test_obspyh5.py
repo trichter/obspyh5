@@ -14,7 +14,7 @@ import obspyh5
 class HDF5TestCase(unittest.TestCase):
 
     def setUp(self):
-        self.stream = read().sort()
+        self.stream = read()
         # add processing info
         self.stream.decimate(2)
         self.stream.differentiate()
@@ -43,27 +43,50 @@ class HDF5TestCase(unittest.TestCase):
         self.assertEqual(stream, stream2)
 
     def test_hdf5_plugin_and_xcorr_index(self):
-        set_index('xcorr')
-        stream = self.stream.copy()
-        for i, tr in enumerate(stream):  # manipulate stats object
-            station1, station2 = 'ST1', 'ST%d' % i
-            channel1, channel2 = 'HHZ', u'HHN'
-            s = tr.stats
-            # we manipulate seed id so that important information gets
-            # printed by obspy
-            s.network, s.station = s.station1, s.channel1 = station1, channel1
-            s.location, s.channel = s.station2, s.channel2 = station2, channel2
-            s.network1 = s.network2 = 'BW'
-            s.location1 = s.location2 = ''
-        stream.sort()
-        with NamedTemporaryFile(suffix='.h5') as ft:
-            fname = ft.name
-            stream.write(fname, 'H5')
-            stream2 = read(fname).sort()
-        for tr in stream2:
+        try:
+            set_index('xcorr')
+            stream = self.stream.copy()
+            for i, tr in enumerate(stream):  # manipulate stats object
+                station1, station2 = 'ST1', 'ST%d' % i
+                channel1, channel2 = 'HHZ', u'HHN'
+                s = tr.stats
+                # we manipulate seed id so that important information gets
+                # printed by obspy
+                s.network, s.station = s.station1, s.channel1 = station1, channel1
+                s.location, s.channel = s.station2, s.channel2 = station2, channel2
+                s.network1 = s.network2 = 'BW'
+                s.location1 = s.location2 = ''
+            stream.sort()
+            with NamedTemporaryFile(suffix='.h5') as ft:
+                fname = ft.name
+                stream.write(fname, 'H5')
+                stream2 = read(fname).sort()
+            for tr in stream2:
+                del tr.stats._format
+            self.assertEqual(stream, stream2)
+        finally:
+            set_index()
+
+    def test_flat_and_nested_index(self):
+        for index in ('flat', 'nested'):
+            set_index(index)
+            stream = self.stream.copy()
+            try:
+                with NamedTemporaryFile(suffix='.h5') as ft:
+                    fname = ft.name
+                    stream.write(fname, 'H5')
+                    stream2 = read(fname)
+                    if index == 'nested':
+                        stream3 = read(fname, grop='waveforms/BW.RJOB')
+            finally:
+                set_index()
+            for tr in stream2:
+                del tr.stats._format
+            self.assertEqual(stream.sort(), stream2.sort())
+        for tr in stream3:
             del tr.stats._format
-        set_index()
-        self.assertEqual(stream, stream2)
+        self.assertEqual(stream.sort(), stream3.sort())
+
 
     def test_hdf5_basic(self):
         stream = self.stream
@@ -147,22 +170,17 @@ class HDF5TestCase(unittest.TestCase):
             stream2 = read(fname, 'H5', headonly=True)
             stream2[0].stats.header = -42
             self.assertEqual(len(stream2[0]), 0)
-            stream2.write(fname, 'H5', mode='a', headonly=True)
-            stream2 = read(fname, 'H5')
-            self.assertEqual(stream2[0].stats.header, -42)
-            stream2[0].stats.header = 42
-            for tr in stream2:
-                del tr.stats._format
-            self.assertEqual(stream, stream2)
 
     def test_stored_index(self):
         stream = self.stream
-        with NamedTemporaryFile(suffix='.h5') as ft:
-            fname = ft.name
-            stream.write(fname, 'H5')
-            set_index('nonesens')
-            stream.write(fname, 'H5', mode='a', override='ignore')
-        set_index()
+        try:
+            with NamedTemporaryFile(suffix='.h5') as ft:
+                fname = ft.name
+                stream.write(fname, 'H5')
+                set_index('nonesens')
+                stream.write(fname, 'H5', mode='a', override='ignore')
+        finally:
+            set_index()
 
     def test_read_files_saved_prior_version_0_3(self):
         stream = self.stream
@@ -170,12 +188,14 @@ class HDF5TestCase(unittest.TestCase):
                        '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_'
                        '{endtime.datetime:%Y-%m-%dT%H:%M:%S}')
         set_index(index_v_0_2)
-        with NamedTemporaryFile(suffix='.h5') as ft:
-            fname = ft.name
-            stream.write(fname, 'H5', group='waveforms')
-            stream2 = read(fname, 'H5', group='waveforms')
-            stream3 = read(fname, 'H5')
-        set_index()
+        try:
+            with NamedTemporaryFile(suffix='.h5') as ft:
+                fname = ft.name
+                stream.write(fname, 'H5', group='waveforms')
+                stream2 = read(fname, 'H5', group='waveforms')
+                stream3 = read(fname, 'H5')
+        finally:
+            set_index()
         for tr in stream2:
             del tr.stats._format
         for tr in stream3:
@@ -189,7 +209,7 @@ class HDF5TestCase(unittest.TestCase):
         with NamedTemporaryFile(suffix='.h5') as ft:
             fname = ft.name
             stream.write(fname, 'H5')
-            stream.write(fname, 'H5', mode='a', offset_trc_num=3)
+            stream.write(fname, 'H5', mode='a')
             stream2 = read(fname, 'H5')
         for tr in stream2:
             del tr.stats._format
@@ -222,6 +242,14 @@ class HDF5TestCase(unittest.TestCase):
             del tr.stats._format
         self.assertEqual(stream2, stream)
 
+    def test_empty_seedid(self):
+        stream = self.stream.copy()
+        for tr in stream:
+            del tr.stats.processing
+            tr.id = '...'
+        with NamedTemporaryFile(suffix='.h5') as ft:
+            fname = ft.name
+            stream.write(fname, 'H5')
 
 
 def suite():

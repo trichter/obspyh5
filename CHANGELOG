@@ -1,3 +1,12 @@
+v0.6.0:
+   * remove support for headonly keyword when writing H5 files (reading with headonly=True still supported)
+   * change default index to flat index including the trace number as running counter
+     -> traces will not be overwritten by default, even traces with the same metadata
+     -> support for traces without SEED id out of the box (raised an error with default index in version 0.5.0)
+     -> Stream has the same order after writing and subsequent reading (for the default index only)
+   * other pre-defined indices are "flat", "nested" and "xcorr"
+   * allow to use format specifiers {id} (SEED id) and {duration} (in seconds) when creating new indices
+   * remove offset_trc_num keyword, not necessary anymore, because it is preserved as file attribute
 v0.5.0:
    * remove support for python versions < 3.5
    * support writing of more types for the header

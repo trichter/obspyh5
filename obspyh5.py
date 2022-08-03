@@ -29,18 +29,24 @@ try:
 except ImportError:
     pass
 
-__version__ = '0.5.1-dev'
+__version__ = '0.6.0'
 
 _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
 
 _INDEXES = {
-    'standard': ('waveforms/{network}.{station}/{location}.{channel}/'
-                 '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_'
-                 '{endtime.datetime:%Y-%m-%dT%H:%M:%S}'),
-    'xcorr': ('waveforms/{network1}.{station1}-{network2}.{station2}/'
-              '{location1}.{channel1}-{location2}.{channel2}/'
-              '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_'
-              '{endtime.datetime:%Y-%m-%dT%H:%M:%S}')}
+    'standard': (
+        'waveforms/{trc_num:03d}_{id}_'
+        '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_{duration:.1f}s'),
+    'flat': (
+        'waveforms/{id}_'
+        '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_{duration:.1f}s'),
+    'nested': (
+        'waveforms/{network}.{station}/{location}.{channel}/'
+        '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_{duration:.1f}s'),
+    'xcorr': (
+        'waveforms/{network1}.{station1}-{network2}.{station2}/'
+        '{location1}.{channel1}-{location2}.{channel2}/'
+        '{starttime.datetime:%Y-%m-%dT%H:%M:%S}_{duration:.1f}s')}
 
 _INDEX = _INDEXES['standard']
 
@@ -157,11 +163,11 @@ def readh5(fname, group='/', headonly=False, readonly=None, mode='r',
     for tr in iterh5(fname, group=group, readonly=readonly, headonly=headonly,
                      mode=mode):
         traces.append(tr)
-    return Stream(traces=traces).sort()
+    return Stream(traces=traces)
 
 
-def writeh5(stream, fname, mode='w', headonly=False, override='warn',
-            ignore=(), group='/', libver='earliest', offset_trc_num=0,
+def writeh5(stream, fname, mode='w', override='warn',
+            ignore=(), group='/', libver='earliest',
             **kwargs):
     """
     Write stream to HDF5 file.
@@ -171,12 +177,10 @@ def writeh5(stream, fname, mode='w', headonly=False, override='warn',
     :param mode: 'w' (write, default), 'a' (append) or other.
         Argument is passed to h5py.File. Use 'a' to write into an existing
         file. 'w' will create a new empty file in any case.
-    :param headonly: write only the header of the traces
     :param override: 'warn' (default, warn and override), 'raise' (raise
         Exception), 'ignore' (override, without warning), 'dont' (do not
         override, without warning).
         Behaviour if dataset with the same index already exists.
-        For headonly=True this parameter is ignored.
     :param ignore: iterable
         Do not write headers listed inside ignore. Additionally the headers
         'endtime', 'sampling_rate', 'npts' and '_format' are ignored.
@@ -185,7 +189,6 @@ def writeh5(stream, fname, mode='w', headonly=False, override='warn',
     :param libver: hdf5 version bounding for new files,
         `'latest'` for best performance,
         `'earliest'` for best backwards compatibility (default)
-    :param offset_trc_num: will be added to the trace number
     :param **kwargs: Additional kwargs are passed to create_dataset in h5py.
         :param dtype: Data will be converted to this datatype
         :param compression: Compression filter (e.g. 'gzip', 'lzf')
@@ -197,8 +200,6 @@ def writeh5(stream, fname, mode='w', headonly=False, override='warn',
     Most headers are supported, e.g. numbers, strings, UTCDateTime,
     AttribDict, numpy arrays, lists, tuples (will be converted to lists).
     """
-    if headonly and format == 'w':
-        raise ValueError("headonly=True is only supported for format='a'")
     if not splitext(fname)[1]:
         fname = fname + '.h5'
     with h5py.File(fname, mode, libver=libver) as f:
@@ -206,14 +207,18 @@ def writeh5(stream, fname, mode='w', headonly=False, override='warn',
         f.attrs['version'] = __version__
         if 'index' not in f.attrs:
             f.attrs['index'] = _INDEX
+        if 'offset_trc_num' not in f.attrs:
+            f.attrs['offset_trc_num'] = 0
+        trc_num = f.attrs['offset_trc_num']
         group = f.require_group(group)
-        for trc_num, tr in enumerate(stream):
-            trace2group(tr, group, headonly=headonly, override=override,
-                        ignore=ignore, trc_num=trc_num+offset_trc_num,
-                        **kwargs)
+        for tr in stream:
+            trace2group(tr, group, override=override,
+                        ignore=ignore, trc_num=trc_num, **kwargs)
+            trc_num += 1
+            f.attrs['offset_trc_num'] = trc_num
 
 
-def trace2group(trace, group, headonly=False, override='warn', ignore=(),
+def trace2group(trace, group, override='warn', ignore=(),
                 trc_num=0, **kwargs):
     """Write trace into group."""
     if override not in ('warn', 'raise', 'ignore', 'dont'):
@@ -223,8 +228,10 @@ def trace2group(trace, group, headonly=False, override='warn', ignore=(),
         index = group.file.attrs['index']
     except KeyError:
         index = group.file.attrs['index'] = _INDEX
-    index = index.format(trc_num=trc_num, **trace.stats)
-    if index in group and not headonly:
+    duration = trace.stats.endtime - trace.stats.starttime
+    index = index.format(trc_num=trc_num, id=trace.id, duration=duration,
+                         **trace.stats)
+    if index in group:
         msg = "Index '%s' already exists." % index
         if override == 'warn':
             warn(msg + ' Will override trace.')
@@ -233,17 +240,9 @@ def trace2group(trace, group, headonly=False, override='warn', ignore=(),
         elif override == 'dont':
             return
         del group[index]
-    if headonly:
-        try:
-            dataset = group[index]
-        except KeyError:
-            msg = ("Index '%s' does not exist. headonly=True only supports "
-                   "writing headers of existing data.")
-            raise KeyError(msg % index)
-    else:
-        kwargs.setdefault('dtype', trace.data.dtype)
-        dataset = group.create_dataset(index, trace.data.shape, **kwargs)
-        dataset[:] = trace.data
+    kwargs.setdefault('dtype', trace.data.dtype)
+    dataset = group.create_dataset(index, trace.data.shape, **kwargs)
+    dataset[:] = trace.data
     ignore = tuple(ignore) + _IGNORE
     if '_format' in trace.stats and '_format' in _IGNORE:
         # ignore format specific header by default, e.g. trace.stats.mseed
