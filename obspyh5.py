@@ -29,7 +29,7 @@ try:
 except ImportError:
     pass
 
-__version__ = '0.6.0'
+__version__ = '0.6.1-dev'
 
 _IGNORE = ('endtime', 'sampling_rate', 'npts', '_format')
 
