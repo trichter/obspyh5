@@ -21,7 +21,7 @@ HDF5 write/read support for obspy
    :target: https://doi.org/10.5281/zenodo.3953668
 
 
-Saves and writes ObsPy streams to hdf5 files.
+Writes and reads ObsPy streams to/from hdf5 files.
 Stats attributes are preserved if they are numbers, strings,
 UTCDateTime objects or numpy arrays.
 It can be used as a plugin to obspy's read function to read a whole hdf5 file.
