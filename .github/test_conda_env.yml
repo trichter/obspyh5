@@ -5,3 +5,4 @@ dependencies:
   - obspy
   - h5py
   - coverage
+  - pip
