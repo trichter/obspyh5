@@ -252,9 +252,5 @@ class HDF5TestCase(unittest.TestCase):
             stream.write(fname, 'H5')
 
 
-def suite():
-    return unittest.makeSuite(HDF5TestCase, 'test')
-
-
 if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+    unittest.main()
